@@ -3,6 +3,11 @@
 แดชบอร์ดสถิติรายเดือนของหน่วยส่องกล้องทางเดินอาหาร ใช้งานผ่านเว็บเบราว์เซอร์ทั้งบนคอมพิวเตอร์และมือถือ
 หน้าเว็บอยู่บน **GitHub Pages** ส่วนข้อมูลเก็บใน **Google Sheet** ของหน่วยงาน (ผ่าน Google Apps Script)
 
+**ระบบที่ใช้งานจริง**
+- แดชบอร์ด: https://cngis-endoscopy.github.io/endoscopy-dashboard/
+- GitHub repo: https://github.com/cngis-endoscopy/endoscopy-dashboard (บัญชีหน่วยงาน cngis-endoscopy)
+- ข้อมูล: Google Sheet `Endoscopy Dashboard Data` (เมนู ส่วนขยาย › Apps Script)
+
 ภายในมี 7 หน้า: ภาพรวม · รายแพทย์ (แยกอายุรกรรม / ศัลยกรรม) · กรอกข้อมูล · ตารางข้อมูล · กล้องส่องตรวจ (สถานะ + ส่งซ่อม) · Scope of service + ตารางแพทย์ · ตั้งค่ารายการ
 
 ---
