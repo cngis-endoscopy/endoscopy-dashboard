@@ -1,0 +1,1416 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="แดชบอร์ดสถิติหน่วยส่องกล้องทางเดินอาหาร">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230d6a6f'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>สถิติหน่วยส่องกล้อง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky header + tabs; overview = KPI strip → volume trend → mix + distribution → quality small multiples → complications table */
+:root{
+  --bg:#f4f7f7; --panel:#ffffff; --ink:#0f201f; --ink-2:#465857; --muted:#768786; --line:#dbe4e3; --line-2:#eef3f2;
+  --accent:#0d6a6f; --accent-ink:#ffffff; --accent-soft:#e0eeee;
+  --good:#1a7543; --good-soft:#e2f2e8; --warn:#9a5b00; --warn-soft:#fbf0dc; --bad:#b8312f; --bad-soft:#fbe5e4;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948;
+  --prev:#a9b6b5;
+  --f-display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1514; --panel:#162020; --ink:#e7efee; --ink-2:#b3c2c0; --muted:#839390; --line:#283635; --line-2:#1d2928;
+  --accent:#4db5b8; --accent-ink:#06201f; --accent-soft:#173a3b;
+  --good:#52c084; --good-soft:#163a27; --warn:#e3a540; --warn-soft:#3a2c12; --bad:#ef6b6b; --bad-soft:#3d1c1c;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --prev:#4d5c5b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1514; --panel:#162020; --ink:#e7efee; --ink-2:#b3c2c0; --muted:#839390; --line:#283635; --line-2:#1d2928;
+  --accent:#4db5b8; --accent-ink:#06201f; --accent-soft:#173a3b;
+  --good:#52c084; --good-soft:#163a27; --warn:#e3a540; --warn-soft:#3a2c12; --bad:#ef6b6b; --bad-soft:#3d1c1c;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --prev:#4d5c5b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:14px 0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 260px}
+.mark{width:36px;height:36px;border-radius:50%;flex:none;background:radial-gradient(circle at 50% 50%,var(--panel) 0 5px,var(--accent) 6px 9px,transparent 10px),conic-gradient(from 200deg,var(--accent-soft),var(--accent))}
+h1{font-family:var(--f-display);font-weight:700;font-size:19px;margin:0;line-height:1.25;text-wrap:balance}
+.sub{color:var(--muted);font-size:12.5px}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--good)}
+nav{display:flex;gap:4px;overflow-x:auto;margin-top:8px}
+nav a{padding:10px 14px;color:var(--ink-2);text-decoration:none;font-weight:500;border-bottom:2.5px solid transparent;white-space:nowrap}
+nav a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 60px;display:grid;gap:18px}
+section[data-view]{display:grid;gap:18px}
+
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;color:var(--ink-2);padding:7px 12px;font:inherit;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+select,input[type=number],input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+textarea{width:100%;min-height:150px;resize:vertical;line-height:1.6}
+.btn{font:inherit;font-weight:600;border-radius:8px;padding:8px 16px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.spacer{flex:1}
+
+.notice{border:1px dashed var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.notice b{color:var(--warn)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.panel h2{font-family:var(--f-display);font-size:16px;font-weight:600;margin:0}
+.panel .ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.panel .ph .hint{color:var(--muted);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:860px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--panel);padding:14px 16px;display:grid;gap:4px;align-content:start}
+.kpi .k{font-size:12.5px;color:var(--ink-2);font-weight:500}
+.kpi .v{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:15px;font-weight:600;color:var(--ink-2);margin-left:2px}
+.kpi .d{font-size:12px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;width:max-content}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.none{background:var(--line-2);color:var(--muted)}
+.up{color:var(--good)} .down{color:var(--bad)}
+
+.chartbox{position:relative;height:280px}
+.chartbox.sm{height:150px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend i.line{height:2px;border-radius:0;vertical-align:3px;width:14px}
+
+/* distribution stacks */
+.dist{display:grid;gap:14px}
+.drow .dl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;gap:8px}
+.drow .dl b{font-weight:600}
+.drow .dl span{color:var(--muted);font-family:var(--f-num);font-size:12px}
+.stack{display:flex;height:16px;border-radius:4px;overflow:hidden;gap:2px;background:var(--line-2)}
+.stack div{min-width:2px;position:relative}
+.dleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink-2);margin-top:6px}
+.dleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.dleg em{font-style:normal;font-family:var(--f-num);color:var(--muted);font-size:11.5px;margin-left:3px}
+
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.qhead b{font-family:var(--f-display);font-size:15px}
+.qhead .qv{font-family:var(--f-display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+
+/* tables */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line-2);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1}
+thead th{color:var(--ink-2);font-weight:600;background:var(--panel);border-bottom:1px solid var(--line)}
+tr.cat td{background:var(--accent-soft);color:var(--accent);font-weight:600;text-align:left}
+tr.cat td:first-child{background:var(--accent-soft)}
+tr.tot td{font-weight:600;border-top:1px solid var(--line)}
+td.zero{color:var(--muted)}
+td.hot{color:var(--bad);font-weight:600}
+
+/* entry */
+.entry-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.status{font-size:12.5px;color:var(--muted)}
+.status.dirty{color:var(--warn);font-weight:600}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start}
+.ecat h3{font-family:var(--f-display);font-size:15px;margin:0;display:flex;justify-content:space-between;gap:8px}
+.ecat h3 span{font-family:var(--f-num);font-size:13px;color:var(--ink-2);font-weight:500}
+.ecat .hint{color:var(--muted);font-size:12px;margin:2px 0 10px}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)}
+.erow label{font-size:13.5px;overflow-wrap:anywhere}
+.erow input{text-align:right;width:96px;font-family:var(--f-num);padding:6px 8px}
+.checks{display:grid;gap:6px}
+.checks .chip{font-weight:500;font-size:12.5px;padding:4px 10px;border-radius:6px;width:auto}
+
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.field{display:grid;gap:4px}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2)}
+.field small{color:var(--muted);font-size:12px}
+
+.empty{color:var(--muted);text-align:center;padding:40px 10px;font-size:13.5px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:13.5px;z-index:20;max-width:calc(100% - 32px)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--bad-soft);border-radius:8px;padding:8px 12px;font-size:13px}
+/* doctors */
+.share{display:inline-block;width:90px;height:8px;background:var(--line-2);border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:8px}
+.share div{height:100%;background:var(--accent);border-radius:4px}
+.sv{font-family:var(--f-num);font-size:12px;color:var(--ink-2)}
+tr[data-doc]{cursor:pointer}
+tr[data-doc]:hover td{background:var(--line-2)}
+tr.selrow td{background:var(--accent-soft)!important}
+tr.selrow td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.nnote{font-size:11px;color:var(--muted);margin-left:6px}
+.drow2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line-2)}
+.drow2 .no{font-family:var(--f-num);color:var(--muted);font-size:12px;width:22px}
+.drow2 input[type=text]{flex:1;min-width:180px}
+.act{font-size:13px;color:var(--ink-2);display:flex;gap:5px;align-items:center}
+.ibtn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:6px;padding:5px 10px;cursor:pointer}
+.ibtn:disabled{opacity:.4;cursor:not-allowed}
+.ibtn.del{color:var(--bad)}
+.mtable input{width:64px;text-align:right;font-family:var(--f-num);padding:5px 6px}
+.mtable td,.mtable th{padding:4px 6px}
+.mtable th{white-space:normal;min-width:72px;font-size:12px;vertical-align:bottom}
+.mtable th.q{color:var(--accent)}
+/* roles: admin-only controls stay hidden until the viewer is confirmed as admin */
+body:not([data-role="admin"]) .admin-only{display:none!important}
+body:not([data-role="admin"]):not([data-role="staff"]) .writer-only{display:none!important}
+.role{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--line-2);color:var(--ink-2)}
+.role.admin{background:var(--accent-soft);color:var(--accent)}
+/* login (GitHub version) */
+.btn.sm{padding:4px 12px;font-size:12.5px}
+.loginform{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-block:10px;border-top:1px solid var(--line-2);margin-top:10px}
+.loginform label{font-size:13px;font-weight:600;color:var(--ink-2)}
+.loginform input{width:220px;max-width:100%}
+body[data-locked] main>:not(#lockNote){display:none!important}
+body[data-locked] nav{visibility:hidden}
+code{font-family:var(--f-num);font-size:.92em;background:var(--line-2);padding:1px 5px;border-radius:4px}
+/* departments */
+.dtag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--line-2);color:var(--ink-2);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.dtag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c,var(--muted))}
+.deptgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.dcard{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;min-width:0}
+.dch{display:flex;gap:8px;align-items:center}
+.dch i{width:10px;height:10px;border-radius:3px;flex:none}
+.dch b{font-family:var(--f-display);font-size:15px}
+.dcv{font-family:var(--f-display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.dcv small{font-size:14px;color:var(--ink-2);font-weight:600;margin-left:2px}
+.dcl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:13px;align-items:center}
+.dcl dt{color:var(--ink-2)} .dcl dd{margin:0;text-align:right}
+/* scopes & repairs */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.fgrid .wide{grid-column:1/-1}
+.fgrid input,.fgrid select,.fgrid textarea{width:100%}
+.fgrid textarea{min-height:70px}
+.formpanel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tgroup{border-top:1px solid var(--line);padding-block:12px}
+.tgroup:first-child{border-top:0;padding-top:0}
+.tgh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tgh b{font-family:var(--f-display);font-size:15px}
+.tbar{display:flex;gap:2px;width:120px;height:8px;border-radius:4px;overflow:hidden;background:var(--line-2)}
+.srow{display:grid;grid-template-columns:minmax(110px,180px) minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2)}
+.srow .extra{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+.srow.retired{opacity:.55}
+@media (max-width:560px){.srow{grid-template-columns:minmax(0,1fr) auto}.srow .smeta{grid-column:1/-1;order:3}}
+.linkbtn{font:inherit;font-weight:600;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--accent-soft);text-underline-offset:3px}
+.smeta{font-size:12.5px;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.pillsel{font:inherit;font-size:12px;font-weight:600;border-radius:99px;padding:3px 8px;border:1px solid transparent;cursor:pointer}
+.pillsel.good{background:var(--good-soft);color:var(--good)}
+.pillsel.bad{background:var(--bad-soft);color:var(--bad)}
+.pillsel.warn{background:var(--warn-soft);color:var(--warn)}
+.pillsel.none{background:var(--line-2);color:var(--muted)}
+#rpTable td{white-space:normal;vertical-align:top}
+#rpTable td.prob{min-width:200px;text-align:left}
+#rpTable td.l{text-align:left}
+#rpTable tr[data-rp]{cursor:pointer}
+#rpTable tr[data-rp]:hover td{background:var(--line-2)}
+/* service & schedule */
+.svcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.svc{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
+.svc h3{font-family:var(--f-display);font-size:15px;margin:0 0 6px;color:var(--accent)}
+.svc .body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px}
+.svc .body.emp{color:var(--muted);font-style:italic}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.sved{display:grid;gap:8px;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.sved .top{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sved .top input{flex:1;min-width:180px;font-weight:600}
+.sched{table-layout:fixed;min-width:760px}
+.sched th,.sched td{white-space:normal;text-align:left;vertical-align:top;border-right:1px solid var(--line-2)}
+.sched th:first-child,.sched td:first-child{width:150px}
+.sched th.today{color:var(--accent);background:var(--accent-soft)}
+.sched td.today{background:color-mix(in srgb,var(--accent-soft) 45%,var(--panel))}
+.sched .dn{font-weight:600;font-size:13px}
+.sched .nt{font-size:12px;color:var(--muted);margin-top:2px}
+.sched td.slot{font-weight:600;color:var(--ink-2)}
+.sched input[type=text]{width:100%;font-size:12.5px;padding:5px 7px;margin-top:6px}
+.sched .picker summary{font-size:12.5px;padding:5px 8px}
+/* custom kpis / categories */
+.kgrid,.xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px 20px}
+.hb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;font-size:13px;margin-bottom:8px}
+.hb b{font-family:var(--f-num);font-weight:500;font-variant-numeric:tabular-nums}
+.hb i{grid-column:1/-1;height:7px;border-radius:0 4px 4px 0;background:var(--accent);min-width:2px}
+.sgrid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;align-items:start}
+@media (max-width:420px){.sgrid2{grid-template-columns:minmax(0,1fr)}}
+.scard{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;background:var(--panel);min-width:0}
+.scard.new{border-color:var(--accent)}
+.scard .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.scard .top input[type=text]{flex:1;min-width:150px;font-weight:600}
+.scard textarea{min-height:110px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--line-2);color:var(--muted);white-space:nowrap}
+.tag.acc{background:var(--accent-soft);color:var(--accent)}
+.frow{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.formula{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:start}
+.formula>span{font-size:12.5px;color:var(--ink-2);padding-top:8px;font-weight:600}
+.picker{border:1px solid var(--line);border-radius:8px;min-width:0}
+.picker summary{padding:7px 10px;cursor:pointer;font-size:13px;list-style:none;overflow-wrap:anywhere}
+.picker summary::-webkit-details-marker{display:none}
+.picker summary::after{content:" ▾";color:var(--muted)}
+.picker summary.emp{color:var(--muted)}
+.picker .opts{max-height:260px;overflow:auto;padding:2px 10px 10px;border-top:1px solid var(--line-2)}
+.picker .g{font-size:12px;color:var(--accent);font-weight:600;margin-top:8px}
+.picker label{display:flex;gap:6px;font-size:13px;padding:2px 0;align-items:center}
+.fixedf{font-size:13px;padding:7px 10px;background:var(--line-2);border-radius:8px;color:var(--ink-2)}
+.savebar{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:4;box-shadow:0 6px 22px rgba(0,0,0,.12)}
+.ychips{display:flex;flex-wrap:wrap;gap:6px}
+.ychip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 11px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-family:var(--f-num);font-size:13px}
+.ychip button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;width:22px;height:22px;border-radius:50%;line-height:1}
+.ychip button:hover{background:var(--panel)}
+.h3s{font-family:var(--f-display);font-size:14px;font-weight:600;margin:0 0 8px}
+@media (prefers-reduced-motion:no-preference){.kpi .v,.stack div{transition:all .25s}}
+</style>
+<script src="config.js"></script>
+<script src="backend.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="brand"><div class="mark" aria-hidden="true"></div>
+        <div style="min-width:0"><h1 id="unitName">หน่วยส่องกล้องทางเดินอาหาร</h1><div class="sub">สถิติผลการดำเนินงานรายเดือน</div></div>
+      </div>
+      <div class="sync"><span class="dot" id="syncDot"></span><span id="syncText">กำลังเชื่อมต่อ…</span><span class="role" id="roleText" hidden></span>
+        <button type="button" class="btn sm" id="loginOpen" hidden>เข้าสู่ระบบ</button><button type="button" class="btn sm" id="logoutBtn" hidden>ออกจากระบบ</button></div>
+    </div>
+    <form class="loginform" id="loginForm" hidden autocomplete="on">
+      <label for="loginPw">รหัสผ่าน</label>
+      <input type="password" id="loginPw" autocomplete="current-password" required>
+      <button class="btn primary" type="submit" id="loginSubmit">เข้าสู่ระบบ</button>
+      <button class="btn" type="button" id="loginCancel">ยกเลิก</button>
+      <span class="status dirty" id="loginErr" role="alert"></span>
+    </form>
+    <div hidden>
+    </div>
+    <nav aria-label="เมนู">
+      <a href="#overview" data-tab="overview">ภาพรวม</a>
+      <a href="#doctors" data-tab="doctors">รายแพทย์</a>
+      <a href="#entry" data-tab="entry" class="writer-only">กรอกข้อมูล</a>
+      <a href="#data" data-tab="data">ตารางข้อมูล</a>
+      <a href="#scopes" data-tab="scopes">กล้องส่องตรวจ</a>
+      <a href="#service" data-tab="service">Scope of service</a>
+      <a href="#setup" data-tab="setup" class="admin-only">ตั้งค่ารายการ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="notice" id="cfgNote" hidden><div style="flex:1;min-width:220px"><b>ยังไม่ได้เชื่อมต่อ Google Sheets</b> — ผู้ดูแลระบบต้องใส่ URL ของ Apps Script ในไฟล์ <code>config.js</code> ก่อน (ดูขั้นตอนใน README.md) ตอนนี้แสดงข้อมูลตัวอย่างเท่านั้น</div></div>
+  <div class="panel" id="lockNote" hidden><div class="empty"><b>ต้องเข้าสู่ระบบก่อนดูข้อมูล</b><br>ใส่รหัสผ่านที่ได้รับจากผู้ดูแลระบบ<br><br><button type="button" class="btn primary" id="lockLogin">เข้าสู่ระบบ</button></div></div>
+  <div class="notice" id="demoNote" hidden>
+    <div style="flex:1;min-width:220px"><b>ข้อมูลตัวอย่าง</b> — ยังไม่มีข้อมูลจริงในระบบ ตัวเลขที่เห็นเป็นตัวอย่างเพื่อให้เห็นหน้าตาแดชบอร์ด และจะหายไปเองเมื่อบันทึกเดือนแรก</div>
+    <a class="btn primary writer-only" href="#entry" style="text-decoration:none">เริ่มกรอกข้อมูลจริง</a>
+  </div>
+
+  <div class="bar" id="periodBar">
+    <div class="seg" role="group" aria-label="รูปแบบปี">
+      <button type="button" data-mode="fy">ปีงบประมาณ</button>
+      <button type="button" data-mode="cal">ปีปฏิทิน</button>
+    </div>
+    <select id="yearSel" aria-label="ปี"></select>
+    <select id="monthSel" aria-label="เดือน"></select>
+    <span class="sub" id="periodLabel"></span>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section data-view="overview">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="panel">
+      <div class="ph"><h2>จำนวนหัตถการรายเดือน</h2><span class="hint">เทียบช่วงเดียวกันของปีก่อน</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i><span id="lgThis">ปีนี้</span></span><span><i class="line" style="background:var(--prev)"></i><span id="lgPrev">ปีก่อน</span></span></div>
+      <div class="chartbox"><canvas id="cVolume" aria-label="กราฟจำนวนหัตถการรายเดือน" role="img"></canvas></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <div class="ph"><h2>สัดส่วนหัตถการ</h2><span class="hint" id="mixHint"></span></div>
+        <div class="chartbox" id="mixBox"><canvas id="cMix" role="img" aria-label="กราฟแท่งจำนวนหัตถการแต่ละชนิด"></canvas></div>
+      </div>
+      <div class="panel" id="distPanel">
+        <div class="ph"><h2>สัดส่วนผู้ป่วยตามหมวด</h2></div>
+        <div class="dist" id="dist"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>ตัวชี้วัด</h2><span class="hint">เส้นประ = เกณฑ์เป้าหมาย · เพิ่มหรือแก้ตัวชี้วัดได้ที่หน้า ตั้งค่า</span></div>
+      <div class="kgrid" id="quality"></div>
+    </div>
+
+    <div class="panel" id="extraPanel">
+      <div class="ph"><h2>สถิติหมวดอื่นๆ</h2></div>
+      <div class="xgrid" id="extra"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>ภาวะแทรกซ้อน</h2><span class="hint">จำนวนครั้งรายเดือน และอัตราต่อหัตถการทั้งหมด</span></div>
+      <div class="tscroll"><table id="compTable"></table></div>
+    </div>
+  </section>
+
+  <!-- DOCTORS -->
+  <section data-view="doctors" hidden>
+    <div class="bar"><div class="seg" role="group" aria-label="กรองตามแผนก" id="deptSeg"><button type="button" data-dept="all">ทุกแผนก</button><button type="button" data-dept="med">อายุรกรรม</button><button type="button" data-dept="surg">ศัลยกรรม</button></div></div>
+    <div class="panel" id="docEmpty" hidden><div class="empty" id="docEmptyText">ยังไม่มีข้อมูลรายแพทย์ในช่วงนี้ · เพิ่มรายชื่อแพทย์ในส่วน “จัดการรายชื่อแพทย์” ด้านล่าง แล้วกรอกจำนวนแยกรายแพทย์ได้ที่หน้า กรอกข้อมูล</div></div>
+    <div id="docMain" style="display:grid;gap:18px">
+      <div class="panel" id="deptPanel">
+        <div class="ph"><h2>เปรียบเทียบตามแผนก</h2><span class="hint">รวมจากข้อมูลรายแพทย์ของแต่ละแผนก</span></div>
+        <div class="deptgrid" id="deptCards"></div>
+        <h3 class="h3s" style="margin-top:18px">จำนวนหัตถการรายเดือนตามแผนก</h3>
+        <div class="legend" id="deptLegend"></div>
+        <div class="chartbox"><canvas id="cDept" role="img" aria-label="จำนวนหัตถการรายเดือนแยกตามแผนก"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>เปรียบเทียบรายแพทย์</h2><span class="hint" id="docCoverage"></span></div>
+        <div class="tscroll"><table id="docTable"></table></div>
+        <div class="sub" style="margin-top:8px">คลิกชื่อแพทย์เพื่อดูรายละเอียด · n = จำนวน Colonoscopy ถ้าน้อยกว่า 30 ราย อัตราที่คำนวณได้อาจคลาดเคลื่อนมาก</div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h2>รายละเอียดรายแพทย์</h2><select id="docSel" aria-label="เลือกแพทย์"></select></div>
+        <div class="kpis" id="docKpis"></div>
+        <div class="grid2" style="margin-top:18px">
+          <div><h3 class="h3s">จำนวนหัตถการรายเดือน</h3><div class="chartbox"><canvas id="cDocVol" role="img" aria-label="จำนวนหัตถการรายเดือนของแพทย์"></canvas></div></div>
+          <div><h3 class="h3s">สัดส่วนหัตถการ</h3><div class="chartbox" id="docMixBox"><canvas id="cDocMix" role="img" aria-label="สัดส่วนหัตถการของแพทย์"></canvas></div></div>
+        </div>
+        <div style="margin-top:18px"><h3 class="h3s">Adenoma detection rate รายเดือน <span class="sub" style="font-weight:400">· เส้นประ = เกณฑ์</span></h3><div class="chartbox" style="height:190px"><canvas id="cDocAdr" role="img" aria-label="ADR รายเดือนของแพทย์"></canvas></div></div>
+      </div>
+    </div>
+    <div class="panel admin-only">
+      <div class="ph"><h2>จัดการรายชื่อแพทย์</h2><span class="hint">แก้ชื่อได้ตลอด ข้อมูลที่บันทึกไว้แล้วยังผูกกับแพทย์ท่านเดิม</span></div>
+      <div id="docList"></div>
+      <div class="bar" style="margin-top:12px"><button class="btn" id="docAdd" type="button">+ เพิ่มแพทย์</button><span class="status dirty" id="docStatus"></span><span class="spacer"></span><button class="btn" id="docCancel" type="button">ยกเลิก</button><button class="btn primary" id="docSave" type="button">บันทึกรายชื่อ</button></div>
+    </div>
+  </section>
+
+  <!-- ENTRY -->
+  <section data-view="entry" hidden>
+    <div class="panel">
+      <div class="entry-top">
+        <h2 style="margin-right:6px">บันทึกสถิติประจำเดือน</h2>
+        <select id="eYear" aria-label="ปี พ.ศ."></select>
+        <select id="eMonth" aria-label="เดือน"></select>
+        <span class="status" id="eStatus"></span>
+        <span class="spacer"></span>
+        <button class="btn" id="eCopy" type="button">คัดลอกรายการจากเดือนก่อน</button>
+        <button class="btn primary" id="eSave" type="button">บันทึก</button>
+      </div>
+      <div style="margin-top:12px" class="checks" id="eChecks"></div>
+      <div id="eConfirm" style="margin-top:10px" hidden></div>
+    </div>
+    <div class="egrid" id="eGrid"></div>
+    <div class="panel">
+      <div class="ph"><h2>แยกรายแพทย์</h2><span class="hint">จำนวนหัตถการที่แพทย์แต่ละท่านทำในเดือนนี้ (ไม่บังคับ) · แถวล่างสุดคือยอดหน่วยงานไว้เทียบ</span></div>
+      <div id="eDocsEmpty" class="sub" hidden>ยังไม่มีรายชื่อแพทย์ เพิ่มได้ที่ <a href="#doctors">หน้ารายแพทย์</a></div>
+      <div class="tscroll" id="eDocsWrap"><table id="eDocs" class="mtable"></table></div>
+    </div>
+    <div class="panel">
+      <div class="field"><label for="eNote">หมายเหตุประจำเดือน</label><textarea id="eNote" style="min-height:70px" placeholder="เช่น ปิดห้องส่องกล้อง 3 วันเพื่อซ่อมบำรุงเครื่อง"></textarea></div>
+      <div class="bar" style="margin-top:12px"><span class="spacer"></span><button class="admin-only btn danger" id="eDelete" type="button">ลบข้อมูลเดือนนี้</button><button class="btn primary" id="eSave2" type="button">บันทึก</button></div>
+    </div>
+  </section>
+
+  <!-- DATA TABLE -->
+  <section data-view="data" hidden>
+    <div class="panel">
+      <div class="ph"><h2>ตารางสถิติรายเดือน</h2><span class="hint" id="dataHint"></span><span class="spacer"></span><button class="btn" id="csvBtn" type="button">ดาวน์โหลด CSV</button></div>
+      <div class="tscroll"><table id="dataTable"></table></div>
+    </div>
+  </section>
+
+  <!-- SCOPES -->
+  <section data-view="scopes" hidden>
+    <div class="kpis" id="scKpis"></div>
+
+    <div class="panel formpanel" id="scFormPanel" hidden>
+      <div class="ph"><h2 id="scFormTitle">เพิ่มกล้อง</h2></div>
+      <div class="fgrid">
+        <div class="field"><label for="scCode">รหัส / ชื่อเรียกกล้อง *</label><input type="text" id="scCode" placeholder="เช่น GIF-01"></div>
+        <div class="field"><label for="scType">ประเภทกล้อง *</label><input type="text" id="scType" list="scTypes" placeholder="เลือกหรือพิมพ์เอง"></div>
+        <div class="field"><label for="scModel">ยี่ห้อ / รุ่น</label><input type="text" id="scModel" placeholder="เช่น Olympus GIF-H290"></div>
+        <div class="field"><label for="scSerial">Serial no.</label><input type="text" id="scSerial"></div>
+        <div class="field"><label for="scAsset">เลขครุภัณฑ์</label><input type="text" id="scAsset"></div>
+        <div class="field"><label for="scStatus">สถานะ</label><select id="scStatus"></select></div>
+        <div class="field wide"><label for="scNote">หมายเหตุ</label><input type="text" id="scNote" placeholder="เช่น ใช้เฉพาะห้อง 2 / ครบกำหนด PM มี.ค."></div>
+      </div>
+      <datalist id="scTypes"></datalist>
+      <div class="bar" style="margin-top:14px"><button class="btn danger" id="scDel" type="button">ลบกล้องนี้</button><span class="spacer"></span><button class="btn" id="scCancel" type="button">ยกเลิก</button><button class="btn primary" id="scSave" type="button">บันทึก</button></div>
+      <div id="scConfirm" style="margin-top:10px" hidden></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>สถานะกล้องแยกตามประเภท</h2><span class="hint admin-only">เปลี่ยนสถานะได้จากป้ายสถานะ · กดรหัสกล้องเพื่อแก้ไขข้อมูล</span><span class="spacer"></span><button class="admin-only btn primary" id="scAdd" type="button">+ เพิ่มกล้อง</button></div>
+      <div id="scList"></div>
+    </div>
+
+    <div class="panel formpanel" id="rpFormPanel" hidden>
+      <div class="ph"><h2 id="rpFormTitle">บันทึกส่งซ่อม</h2></div>
+      <div class="fgrid">
+        <div class="field"><label for="rpScope">กล้อง *</label><select id="rpScope"></select></div>
+        <div class="field"><label for="rpSent">วันที่ส่งซ่อม *</label><input type="date" id="rpSent"></div>
+        <div class="field"><label for="rpStatus">สถานะการซ่อม</label><select id="rpStatus"></select></div>
+        <div class="field"><label for="rpReturn">วันที่รับคืน</label><input type="date" id="rpReturn"></div>
+        <div class="field wide"><label for="rpProblem">อาการ / ปัญหาที่พบ *</label><textarea id="rpProblem" placeholder="เช่น Leak test ไม่ผ่าน บริเวณ bending section"></textarea></div>
+        <div class="field"><label for="rpVendor">บริษัท / ผู้รับซ่อม</label><input type="text" id="rpVendor"></div>
+        <div class="field"><label for="rpTicket">เลขที่ใบส่งซ่อม</label><input type="text" id="rpTicket"></div>
+        <div class="field"><label for="rpLoan">กล้องสำรอง / ยืมทดแทน</label><input type="text" id="rpLoan" placeholder="ถ้ามี"></div>
+        <div class="field wide"><label for="rpNote">หมายเหตุ</label><input type="text" id="rpNote"></div>
+      </div>
+      <div class="sub" style="margin-top:8px">เมื่อบันทึก ระบบจะเปลี่ยนสถานะกล้องเป็น “ส่งซ่อม” ให้อัตโนมัติ และเปลี่ยนกลับเป็น “พร้อมใช้” เมื่อสถานะการซ่อมเป็น “รับคืนแล้ว”</div>
+      <div class="bar" style="margin-top:14px"><button class="btn danger" id="rpDel" type="button">ลบรายการนี้</button><span class="spacer"></span><button class="btn" id="rpCancel" type="button">ยกเลิก</button><button class="btn primary" id="rpSave" type="button">บันทึก</button></div>
+      <div id="rpConfirm" style="margin-top:10px" hidden></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>รายการส่งซ่อมกล้องส่องตรวจ</h2><span class="hint" id="rpHint"></span><span class="spacer"></span>
+        <div class="seg" role="group" aria-label="ตัวกรองรายการซ่อม"><button type="button" data-rpf="open">กำลังดำเนินการ</button><button type="button" data-rpf="all">ทั้งหมด</button></div>
+        <button class="admin-only btn primary" id="rpAdd" type="button">+ บันทึกส่งซ่อม</button></div>
+      <div class="tscroll"><table id="rpTable"></table></div>
+    </div>
+  </section>
+
+  <!-- SERVICE -->
+  <section data-view="service" hidden>
+    <div class="panel">
+      <div class="ph"><h2>Scope of service</h2><span class="hint" id="svUpdated"></span><span class="spacer"></span><button class="admin-only btn" id="svEdit" type="button">แก้ไข</button></div>
+      <div id="svView" class="svcgrid"></div>
+      <div id="svEditBox" hidden>
+        <div id="svSections"></div>
+        <div class="bar"><button class="btn" id="svAdd" type="button">+ เพิ่มหัวข้อ</button><span class="spacer"></span><button class="btn" id="svCancel" type="button">ยกเลิก</button><button class="btn primary" id="svSave" type="button">บันทึก</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>ตารางแพทย์ประจำสัปดาห์</h2><span class="hint" id="schUpdated">จันทร์ – ศุกร์</span><span class="spacer"></span><button class="admin-only btn" id="schEdit" type="button">แก้ไขตาราง</button></div>
+      <div id="schNoDoc" class="notice" style="margin-bottom:12px" hidden><div style="flex:1">ยังไม่มีรายชื่อแพทย์ให้เลือก เพิ่มรายชื่อได้ที่ <a href="#doctors">หน้ารายแพทย์</a> ระหว่างนี้พิมพ์ชื่อในช่องหมายเหตุของแต่ละช่องได้</div></div>
+      <div class="tscroll"><table id="schTable" class="sched"></table></div>
+      <div class="bar" id="schBar" style="margin-top:12px" hidden><button class="btn" id="schAddRow" type="button">+ เพิ่มช่วงเวลา / ห้อง</button><span class="spacer"></span><button class="btn" id="schCancel" type="button">ยกเลิก</button><button class="btn primary" id="schSave" type="button">บันทึกตาราง</button></div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section data-view="setup" id="setupSec" hidden>
+    <div class="panel">
+      <div class="ph"><h2>ข้อมูลหน่วยงาน</h2></div>
+      <div class="field" style="max-width:520px"><label for="sUnit">ชื่อหน่วยงาน</label><input type="text" id="sUnit"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>ปีปฏิทินและปีงบประมาณ</h2><span class="hint">ปี พ.ศ. ที่เลือกดูได้ในหน้าภาพรวม รายแพทย์ และตารางข้อมูล</span></div>
+      <div class="sgrid2">
+        <div class="scard"><h3 class="h3s" style="margin:0">ปีปฏิทิน (ม.ค. – ธ.ค.)</h3>
+          <div class="ychips" id="yCal"></div>
+          <div class="frow"><input type="number" id="yCalIn" placeholder="เช่น 2570" min="2400" max="2700" style="width:130px" aria-label="เพิ่มปีปฏิทิน พ.ศ."><button type="button" class="btn" id="yCalAdd">+ เพิ่มปี</button></div>
+          <small class="sub">ปีปฏิทินใช้เป็นตัวเลือกปีในหน้ากรอกข้อมูลด้วย</small></div>
+        <div class="scard"><h3 class="h3s" style="margin:0">ปีงบประมาณ</h3>
+          <div class="ychips" id="yFy"></div>
+          <div class="frow"><input type="number" id="yFyIn" placeholder="เช่น 2571" min="2400" max="2700" style="width:130px" aria-label="เพิ่มปีงบประมาณ พ.ศ."><button type="button" class="btn" id="yFyAdd">+ เพิ่มปี</button></div>
+          <div class="field"><label for="yFyStart">ปีงบประมาณเริ่มเดือน</label><select id="yFyStart"></select></div>
+          <small class="sub" id="yFyPrev"></small></div>
+        <div class="scard"><h3 class="h3s" style="margin:0">ค่าเริ่มต้นเมื่อเปิดหน้า</h3>
+          <div class="field"><label for="yMode">แสดงสถิติตาม</label><select id="yMode"><option value="fy">ปีงบประมาณ</option><option value="cal">ปีปฏิทิน</option></select></div>
+          <small class="sub">ผู้ใช้แต่ละคนยังสลับดูอีกแบบได้จากปุ่มด้านบนของหน้าภาพรวม</small></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>หมวดสถิติ</h2><span class="hint">ลำดับหมวดที่นี่คือลำดับในหน้ากรอกข้อมูล · พิมพ์รายการ 1 บรรทัดต่อ 1 รายการ · รายการที่ลบออกจะไม่แสดง แต่ข้อมูลเก่ายังเก็บอยู่</span></div>
+      <div class="sgrid2" id="sCats"></div>
+      <div class="bar" style="margin-top:14px"><button class="btn" id="sAddCat" type="button">+ เพิ่มหมวดสถิติ</button></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>ตัวชี้วัด</h2><span class="hint">ตัวชี้วัด = ผลรวมรายการที่เลือกเป็นตัวตั้ง ÷ ผลรวมรายการที่เลือกเป็นตัวหาร</span></div>
+      <div class="sgrid2" id="sKpis"></div>
+      <div class="bar" style="margin-top:14px"><button class="btn" id="sAddKpi" type="button">+ เพิ่มตัวชี้วัด</button><span class="sub">ตัวชี้วัดที่ต้องนับเองทุกเดือน ให้สร้างหมวดสถิติสำหรับเก็บตัวเลขนั้นก่อน แล้วเลือกมาเป็นตัวตั้งและตัวหาร</span></div>
+    </div>
+    <div class="panel savebar">
+      <div class="bar"><span class="status" id="sStatus"></span><span class="spacer"></span><button class="btn" id="sCancel" type="button">ยกเลิกการแก้ไข</button><button class="btn" id="sReset" type="button">คืนค่าเริ่มต้น</button><button class="btn primary" id="sSave" type="button">บันทึกการตั้งค่า</button></div>
+      <div id="sConfirm" style="margin-top:10px" hidden></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="vendor/chart-4.4.1.umd.min.js"></script>
+<script>
+(function(){
+const TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TH_MF=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const DEFAULT_CFG={
+  unit:'หน่วยส่องกล้องทางเดินอาหาร',
+  doctors:[],
+  cats:[
+    {id:'proc',name:'หัตถการ',hint:'นับ 1 รายต่อหัตถการหลัก (EGD + Colonoscopy ในครั้งเดียวกัน นับ 1)',items:['EGD','EGD & Colonoscopy','Colonoscopy','Flexible Sigmoidoscopy','ERCP','EUS','EUS-FNA/FNB','Enteroscopy','Capsule endoscopy','PEG / Change PEG','ESD / EMR','อื่นๆ']},
+    {id:'ctype',name:'ประเภทเคส',hint:'รวมควรเท่ากับจำนวนหัตถการทั้งหมด',items:['Elective','Emergency'],locked:true,view:'share'},
+    {id:'adm',name:'ประเภทผู้ป่วย',hint:'รวมควรเท่ากับจำนวนหัตถการทั้งหมด',items:['OPD','IPD'],view:'share'},
+    {id:'tech',name:'การระงับความรู้สึก',hint:'รวมควรเท่ากับจำนวนหัตถการทั้งหมด',items:['No sedation / LA','Moderate sedation','MAC','GA'],view:'share'},
+    {id:'payer',name:'สิทธิการรักษา',hint:'',items:['ข้าราชการ / รัฐวิสาหกิจ','ประกันสังคม','บัตรทอง (UC)','ชำระเงินเอง / อื่นๆ'],view:'share'},
+    {id:'prep',name:'Bowel preparation',hint:'เฉพาะ Colonoscopy (เช่น BBPS ≥ 6 = Adequate)',items:['Adequate','Inadequate'],locked:true,view:'none'},
+    {id:'qual',name:'คุณภาพ Colonoscopy',hint:'จำนวนราย Colonoscopy ที่ผ่านแต่ละเกณฑ์',items:['ถึง Cecum','พบ Adenoma'],locked:true,view:'none'},
+    {id:'comp',name:'ภาวะแทรกซ้อน',hint:'จำนวนครั้งที่เกิด',items:['Bleeding','Perforation','Post-ERCP pancreatitis','Hypoxia / Hypotension','Aspiration','อื่นๆ']},
+    {id:'spec',name:'สิ่งส่งตรวจ',hint:'',items:['ชิ้นเนื้อ (Biopsy)','CLO test','Urea breath test'],view:'bars'}
+  ]
+};
+const FIXED_VIEW=['proc','comp'];
+const DEFAULT_KPIS=[
+  {id:'cecal',name:'Cecal intubation rate',num:['qual|ถึง Cecum'],den:['@colo'],unit:'pct',dir:'ge',target:90,pin:true},
+  {id:'adr',name:'Adenoma detection rate (ADR)',num:['qual|พบ Adenoma'],den:['@colo'],unit:'pct',dir:'ge',target:25,pin:true},
+  {id:'prep',name:'Bowel prep adequate',num:['prep|Adequate'],den:['prep|*'],unit:'pct',dir:'ge',target:85,pin:true},
+  {id:'comp',name:'อัตราภาวะแทรกซ้อน',num:['comp|*'],den:['@total'],unit:'pct',dir:'le',target:1,pin:true}
+];
+function normalizeCfg(c){
+  c=c||{};const n={unit:c.unit||DEFAULT_CFG.unit};
+  n.doctors=Array.isArray(c.doctors)?c.doctors:[];
+  {const y=c.years||{},S=Math.min(12,Math.max(1,Math.round(+y.fyStart)||10)),nb=new Date().getFullYear()+543,nm=new Date().getMonth()+1;
+   const curFy=S===1?nb:(nm>=S?nb+1:nb),clean=a=>Array.isArray(a)?[...new Set(a.map(Number).filter(v=>Number.isInteger(v)&&v>=2400&&v<=2700))].sort((p,q)=>q-p):null;
+   n.years={cal:clean(y.cal)||[nb,nb-1,nb-2],fy:clean(y.fy)||[curFy,curFy-1,curFy-2],mode:y.mode==='cal'?'cal':'fy',fyStart:S}}
+  const src=Array.isArray(c.cats)&&c.cats.length?c.cats:DEFAULT_CFG.cats;
+  n.cats=src.map(x=>{const d=DEFAULT_CFG.cats.find(y=>y.id===x.id);const o={id:x.id,name:x.name||(d&&d.name)||'หมวด',hint:x.hint||'',items:Array.isArray(x.items)?x.items.slice():[],custom:!d};
+    if(d&&d.locked){o.locked=true;o.items=d.items.slice()}
+    if(!FIXED_VIEW.includes(o.id))o.view=x.view||(d&&d.view)||'bars';return o});
+  for(const d of DEFAULT_CFG.cats)if(!n.cats.some(x=>x.id===d.id))n.cats.push({...structuredClone(d),custom:false});
+  const t=c.targets||{};
+  const ks=Array.isArray(c.kpis)?c.kpis:DEFAULT_KPIS.map(k=>({...k,target:t[k.id]??k.target}));
+  n.kpis=ks.map(k=>{const b=DEFAULT_KPIS.find(x=>x.id===k.id);const o={id:k.id,name:k.name||(b&&b.name)||'',num:(k.num||[]).slice(),den:(k.den||[]).slice(),unit:k.unit==='per1000'?'per1000':'pct',dir:k.dir==='le'?'le':'ge',target:isFinite(+k.target)?+k.target:0,pin:!!k.pin,builtin:!!b};
+    if(b){o.num=b.num.slice();o.den=b.den.slice()}return o});
+  for(const b of DEFAULT_KPIS)if(!n.kpis.some(k=>k.id===b.id))n.kpis.push({...structuredClone(b),builtin:true});
+  return n;
+}
+const SERIES=['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const nowBE=new Date().getFullYear()+543, nowM=new Date().getMonth()+1;
+const keyOf=(y,m)=>y+'-'+String(m).padStart(2,'0');
+const fmt=n=>n==null||isNaN(n)?'—':Number(n).toLocaleString('th-TH');
+const pct=(a,b)=>b>0?a/b*100:null;
+const fmtP=p=>p==null?'—':(Math.round(p*10)/10).toLocaleString('th-TH',{maximumFractionDigits:1});
+
+let cfg=normalizeCfg(DEFAULT_CFG);
+let role='loading';document.body.dataset.role=role;
+const isAdmin=()=>role==='admin';
+let real={}, demo=null, db=null, user=null, canWrite=true, loaded=false;
+let mode='fy', year=fyOf(nowBE,nowM), month=0; // month 0 = whole year
+let modeFromPref=false;
+function readPref(){try{const p=JSON.parse(localStorage.getItem('endo-pref')||'{}');if(p.mode){mode=p.mode;modeFromPref=true}}catch(e){}}
+function savePref(){try{localStorage.setItem('endo-pref',JSON.stringify({mode}));}catch(e){}}
+function fyS(){return (cfg&&cfg.years&&cfg.years.fyStart)||10}
+function fyOf(y,m){const S=fyS();return S===1?y:(m>=S?y+1:y)}
+
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
+
+/* ---------- period ---------- */
+function periodKeys(y,md){const out=[];
+  if(md==='fy'){const S=fyS();if(S===1)for(let m=1;m<=12;m++)out.push({y,m});else{for(let m=S;m<=12;m++)out.push({y:y-1,m});for(let m=1;m<S;m++)out.push({y,m})}}
+  else for(let m=1;m<=12;m++)out.push({y,m});
+  return out.map(o=>({...o,key:keyOf(o.y,o.m),label:TH_M[o.m-1]}));}
+const data=()=>Object.keys(real).length?real:(demo||{});
+function val(key,cat,item){const d=data()[key];if(!d||!d.v)return null;const x=d.v[cat+'|'+item];return x==null||x===''?null:Number(x)}
+function catItems(id){const c=cfg.cats.find(c=>c.id===id);return c?c.items:[]}
+function sumCat(keys,cat,filter){let s=0,any=false;for(const k of keys)for(const it of catItems(cat)){if(filter&&!filter(it))continue;const v=val(k,cat,it);if(v!=null){s+=v;any=true}}return any?s:null}
+const isColo=it=>/colonoscopy/i.test(it);
+function hasData(k){return !!data()[k]}
+
+/* ---------- demo data (only when nothing is saved) ---------- */
+function makeDemo(docs){let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;const out={};
+  const base={'EGD':150,'EGD & Colonoscopy':38,'Colonoscopy':118,'Flexible Sigmoidoscopy':9,'ERCP':26,'EUS':14,'EUS-FNA/FNB':8,'Enteroscopy':2,'Capsule endoscopy':3,'PEG / Change PEG':11,'ESD / EMR':5,'อื่นๆ':6};
+  const lastY=nowBE,lastM=nowM-1||12, ly=nowM-1?nowBE:nowBE-1;
+  for(let i=0;i<22;i++){let m=lastM-i,y=ly;while(m<1){m+=12;y--}
+    const season=1+0.08*Math.sin(m/12*6.28)+(y<ly?-0.06:0), v={};let tot=0;
+    for(const [k,b] of Object.entries(base)){const n=Math.max(0,Math.round(b*season*(0.85+r()*0.3)));v['proc|'+k]=n;tot+=n}
+    const em=Math.round(tot*(0.08+r()*0.05));v['ctype|Elective']=tot-em;v['ctype|Emergency']=em;
+    const ipd=Math.round(tot*(0.27+r()*0.06));v['adm|OPD']=tot-ipd;v['adm|IPD']=ipd;
+    const ga=Math.round(tot*.06),mac=Math.round(tot*.22),mod=Math.round(tot*.47);v['tech|GA']=ga;v['tech|MAC']=mac;v['tech|Moderate sedation']=mod;v['tech|No sedation / LA']=tot-ga-mac-mod;
+    const c1=Math.round(tot*.38),c2=Math.round(tot*.31),c3=Math.round(tot*.22);v['payer|ข้าราชการ / รัฐวิสาหกิจ']=c1;v['payer|ประกันสังคม']=c2;v['payer|บัตรทอง (UC)']=c3;v['payer|ชำระเงินเอง / อื่นๆ']=tot-c1-c2-c3;
+    const colo=v['proc|Colonoscopy']+v['proc|EGD & Colonoscopy'];const ad=Math.round(colo*(0.84+r()*0.09));v['prep|Adequate']=ad;v['prep|Inadequate']=colo-ad;
+    v['qual|ถึง Cecum']=Math.round(colo*(0.9+r()*0.07));v['qual|พบ Adenoma']=Math.round(colo*(0.22+r()*0.1));
+    v['comp|Bleeding']=Math.round(r()*2.4);v['comp|Perforation']=r()>.88?1:0;v['comp|Post-ERCP pancreatitis']=Math.round(r()*1.6);v['comp|Hypoxia / Hypotension']=Math.round(r()*3);v['comp|Aspiration']=r()>.9?1:0;v['comp|อื่นๆ']=0;
+    v['spec|ชิ้นเนื้อ (Biopsy)']=Math.round(tot*.42);v['spec|CLO test']=Math.round(tot*.18);v['spec|Urea breath test']=Math.round(20+r()*15);
+    if(docs&&docs.length){const W=[.3,.24,.2,.15,.11],RA=[.31,.26,.21,.17,.28],RC=[.96,.94,.92,.87,.95];
+      const w=docs.map((d,i)=>W[i%5]),ws=w.reduce((a,b)=>a+b,0);
+      for(const it of Object.keys(base)){const n=v['proc|'+it];let left=n;docs.forEach((d,i)=>{const x=i===docs.length-1?left:Math.min(left,Math.round(n*w[i]/ws));v['d.'+d.id+'|'+it]=x;left-=x})}
+      let cs=0,as=0;docs.forEach((d,i)=>{const c=v['d.'+d.id+'|Colonoscopy']+v['d.'+d.id+'|EGD & Colonoscopy'];const cc=Math.min(c,Math.round(c*(RC[i%5]+(r()-.5)*.04)));const a=Math.round(c*(RA[i%5]+(r()-.5)*.06));v['d.'+d.id+'|#cecum']=cc;v['d.'+d.id+'|#adenoma']=a;cs+=cc;as+=a});
+      v['qual|ถึง Cecum']=cs;v['qual|พบ Adenoma']=as;
+      const ct=Object.keys(v).filter(k=>k.startsWith('comp|')).reduce((a,k)=>a+v[k],0);docs.forEach(d=>v['d.'+d.id+'|#comp']=0);
+      for(let j=0;j<ct;j++)v['d.'+docs[Math.floor(r()*docs.length)].id+'|#comp']++;}
+    out[keyOf(y,m)]={y,m,v};}
+  return out;}
+
+/* ---------- period controls ---------- */
+function yearsAvailable(){const L=(mode==='fy'?cfg.years.fy:cfg.years.cal)||[];
+  return L.length?[...L].sort((a,b)=>b-a):[mode==='fy'?fyOf(nowBE,nowM):nowBE]}
+function buildPeriodBar(){
+  $$('#periodBar [data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode));
+  const ys=yearsAvailable();if(!ys.includes(year))year=ys[0];
+  $('#yearSel').innerHTML=ys.map(y=>`<option value="${y}">${mode==='fy'?'ปีงบประมาณ ':'ปี '}${y}</option>`).join('');
+  $('#yearSel').value=year;
+  const ks=periodKeys(year,mode);
+  $('#monthSel').innerHTML='<option value="0">ทั้งปี</option>'+ks.map((k,i)=>`<option value="${i+1}">${TH_MF[k.m-1]} ${k.y}</option>`).join('');
+  $('#monthSel').value=month;
+  const filled=ks.filter(k=>hasData(k.key)).length;
+  $('#periodLabel').textContent=mode==='fy'?`${ks[0].label} ${ks[0].y} – ${ks[11].label} ${ks[11].y} · มีข้อมูล ${filled}/12 เดือน`:`มีข้อมูล ${filled}/12 เดือน`;
+}
+$$('#periodBar [data-mode]').forEach(b=>b.onclick=()=>{const old=mode;mode=b.dataset.mode;if(old!==mode){year=mode==='fy'?fyOf(nowBE,nowM):nowBE;month=0}modeFromPref=true;savePref();renderAll()});
+$('#yearSel').onchange=e=>{year=+e.target.value;renderAll()};
+$('#monthSel').onchange=e=>{month=+e.target.value;renderData();route()};
+
+/* ---------- overview ---------- */
+const charts={};
+function chartBase(){return{responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:300},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:css('--ink'),titleColor:css('--bg'),bodyColor:css('--bg'),padding:10,cornerRadius:6,titleFont:{family:'IBM Plex Sans Thai'},bodyFont:{family:'IBM Plex Sans Thai'},displayColors:true,boxPadding:4}},
+  scales:{x:{grid:{display:false},border:{color:css('--line')},ticks:{color:css('--muted'),font:{family:'IBM Plex Sans Thai',size:12}}},
+          y:{beginAtZero:true,grid:{color:css('--line-2')},border:{display:false},ticks:{color:css('--muted'),font:{family:'IBM Plex Mono',size:11},precision:0}}}}}
+function mkChart(id,cfgc){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfgc)}
+
+function sel(){const ks=periodKeys(year,mode);return month?[ks[month-1]]:ks}
+function prevSel(){return sel().map(k=>({...k,y:k.y-1,key:keyOf(k.y-1,k.m)}))}
+function totalOf(keys){return sumCat(keys,'proc')}
+
+function statusChip(v,target,higherBetter,suf='%'){if(v==null)return'<span class="chip none">ไม่มีข้อมูล</span>';
+  const ok=higherBetter?v>=target:v<=target;const s=`${higherBetter?'≥':'≤'} ${fmtP(target)}${suf}`;return ok?`<span class="chip good">✓ ผ่านเกณฑ์ ${s}</span>`:`<span class="chip bad">! ไม่ผ่านเกณฑ์ ${s}</span>`}
+
+/* ---------- KPI engine ---------- */
+function targetOf(id){const k=cfg.kpis.find(x=>x.id===id);return k?k.target:0}
+function refSum(keys,ref){
+  if(ref==='@total')return totalOf(keys);
+  if(ref==='@colo')return sumCat(keys,'proc',isColo);
+  const i=ref.indexOf('|'),cat=ref.slice(0,i),it=ref.slice(i+1);
+  if(it==='*')return sumCat(keys,cat);
+  let s=0,any=false;for(const k of keys){const v=val(k,cat,it);if(v!=null){s+=v;any=true}}return any?s:null}
+function refsSum(keys,refs){let s=0,any=false;for(const r of refs||[]){const v=refSum(keys,r);if(v!=null){s+=v;any=true}}return any?s:null}
+function kpiCalc(keys,k){if(!k.num.length||!k.den.length)return null;const d=refsSum(keys,k.den);if(!d)return null;const n=refsSum(keys,k.num);if(n==null)return null;return n/d*(k.unit==='per1000'?1000:100)}
+const sufOf=k=>k.unit==='per1000'?' ต่อ 1,000':'%';
+const sufShort=k=>k.unit==='per1000'?'/1,000':'%';
+function refLabel(ref,cats){if(ref==='@total')return'หัตถการทั้งหมด';if(ref==='@colo')return'Colonoscopy ทั้งหมด';
+  const i=ref.indexOf('|'),c=(cats||cfg.cats).find(x=>x.id===ref.slice(0,i)),it=ref.slice(i+1);const cn=c?c.name:'(หมวดที่ถูกลบ)';
+  return it==='*'?`${cn} ทุกรายการ`:`${it} (${cn})`}
+
+function renderOverview(){
+  if(typeof Chart==='undefined')return;
+  const K=sel().map(k=>k.key), P=prevSel().map(k=>k.key);
+  const tot=totalOf(K), ptot=totalOf(P);
+  const delta=tot!=null&&ptot?((tot-ptot)/ptot*100):null;
+  const em=sumCat(K,'ctype',i=>i==='Emergency'), ctAll=sumCat(K,'ctype');
+  const comp=sumCat(K,'comp'), compR=tot&&comp!=null?comp/tot*100:null;
+  const colo=sumCat(K,'proc',isColo);
+  const filled=K.filter(hasData).length;
+  const has=x=>filled?x:null;
+  $('#kpis').innerHTML=`
+   <div class="kpi"><div class="k">หัตถการทั้งหมด</div><div class="v">${fmt(tot)}<small>ราย</small></div>
+     <div class="d">${delta==null?'ไม่มีข้อมูลปีก่อนเทียบ':`<span class="${delta>=0?'up':'down'}">${delta>=0?'▲':'▼'} ${fmtP(Math.abs(delta))}%</span> จาก ${fmt(ptot)} ช่วงเดียวกันปีก่อน`}</div></div>
+   <div class="kpi"><div class="k">Colonoscopy</div><div class="v">${fmt(colo)}<small>ราย</small></div><div class="d">${tot?fmtP(pct(colo,tot))+'% ของหัตถการ':'—'}</div></div>
+   <div class="kpi"><div class="k">เคสฉุกเฉิน</div><div class="v">${fmtP(has(pct(em||0,ctAll)))}<small>%</small></div><div class="d">${fmt(em)} ราย</div></div>
+   `+cfg.kpis.filter(k=>k.pin).map(k=>{const v=kpiCalc(K,k);return `<div class="kpi"><div class="k">${esc(k.name)}</div><div class="v">${fmtP(v)}<small>${sufShort(k)}</small></div>${statusChip(v,k.target,k.dir!=='le',sufOf(k))}</div>`}).join('');
+
+  // volume
+  const ks=periodKeys(year,mode);
+  const thisY=ks.map(k=>totalOf([k.key])), prevY=ks.map(k=>totalOf([keyOf(k.y-1,k.m)]));
+  $('#lgThis').textContent=(mode==='fy'?'ปีงบ ':'ปี ')+year; $('#lgPrev').textContent=(mode==='fy'?'ปีงบ ':'ปี ')+(year-1);
+  const acc=css('--accent'), accSoft=css('--accent-soft');
+  mkChart('cVolume',{type:'bar',data:{labels:ks.map(k=>k.label),datasets:[
+    {type:'bar',label:$('#lgThis').textContent,data:thisY,backgroundColor:ks.map((k,i)=>month&&i!==month-1?accSoft:acc),borderRadius:{topLeft:4,topRight:4},maxBarThickness:42,order:2},
+    {type:'line',label:$('#lgPrev').textContent,data:prevY,borderColor:css('--prev'),backgroundColor:css('--prev'),borderWidth:2,borderDash:[5,4],pointRadius:3,pointHoverRadius:5,tension:.25,spanGaps:true,order:1}]},
+    options:{...chartBase(),interaction:{mode:'index',intersect:false},plugins:{...chartBase().plugins,tooltip:{...chartBase().plugins.tooltip,callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} ราย`}}}}});
+
+  // mix
+  const items=catItems('proc').map(it=>({it,n:sumCat(K,'proc',x=>x===it)||0})).filter(o=>o.n>0).sort((a,b)=>b.n-a.n);
+  $('#mixHint').textContent=month?`${TH_MF[sel()[0].m-1]} ${sel()[0].y}`:'ทั้งปี';
+  $('#mixBox').style.height=Math.max(160,items.length*30+30)+'px';
+  mkChart('cMix',{type:'bar',data:{labels:items.map(o=>o.it),datasets:[{data:items.map(o=>o.n),backgroundColor:acc,borderRadius:{topRight:4,bottomRight:4},barThickness:16}]},
+    options:{...chartBase(),indexAxis:'y',scales:{x:{...chartBase().scales.y,grid:{color:css('--line-2')}},y:{...chartBase().scales.x,ticks:{color:css('--ink-2'),font:{family:'IBM Plex Sans Thai',size:12}}}},
+     plugins:{...chartBase().plugins,tooltip:{...chartBase().plugins.tooltip,displayColors:false,callbacks:{label:c=>`${fmt(c.raw)} ราย · ${fmtP(pct(c.raw,tot))}%`}}}}});
+
+  // distribution
+  const shareCats=cfg.cats.filter(c=>c.view==='share');
+  $('#distPanel').hidden=!shareCats.length;
+  $('#dist').innerHTML=shareCats.map(c=>{const id=c.id;
+    const parts=c.items.map((it,i)=>({it,n:sumCat(K,id,x=>x===it)||0,col:`var(${SERIES[i%8]})`}));const s=parts.reduce((a,b)=>a+b.n,0);
+    return `<div class="drow"><div class="dl"><b>${esc(c.name)}</b><span>${fmt(s||null)} ราย</span></div>
+      <div class="stack" role="img" aria-label="${esc(c.name)}">${s?parts.filter(p=>p.n).map(p=>`<div style="flex:${p.n};background:${p.col}" title="${esc(p.it)}: ${fmt(p.n)} (${fmtP(pct(p.n,s))}%)"></div>`).join(''):''}</div>
+      <div class="dleg">${parts.map(p=>`<span><i style="background:${p.col}"></i>${esc(p.it)}<em>${s?fmtP(pct(p.n,s))+'%':'—'}</em></span>`).join('')}</div></div>`}).join('');
+
+  // quality small multiples
+  Object.keys(charts).filter(id=>id.startsWith('qk_')).forEach(id=>{charts[id].destroy();delete charts[id]});
+  $('#quality').innerHTML=cfg.kpis.length?cfg.kpis.map((k,i)=>{const v=kpiCalc(K,k);return `<div><div class="qhead"><b>${esc(k.name)}</b><span class="qv">${fmtP(v)}${sufShort(k)}</span></div>
+    <div style="margin:4px 0 8px">${statusChip(v,k.target,k.dir!=='le',sufOf(k))}</div><div class="chartbox sm"><canvas id="qk_${i}" role="img" aria-label="${esc(k.name)} รายเดือน"></canvas></div></div>`}).join('')
+    :'<div class="empty">ยังไม่มีตัวชี้วัด เพิ่มได้ที่หน้า ตั้งค่า</div>';
+  cfg.kpis.forEach((k,i)=>{const ge=k.dir!=='le',t=k.target,suf=sufShort(k);
+    const vals=ks.map(x=>{const v=kpiCalc([x.key],k);return v==null?null:Math.round(v*10)/10});
+    const fail=v=>v!=null&&(ge?v<t:v>t);const nums=vals.filter(v=>v!=null);
+    let y;
+    if(ge&&k.unit==='pct'){const lo=Math.max(0,Math.floor(Math.min(t,...nums)/10)*10-5);y={beginAtZero:false,min:lo,max:100}}
+    else y={beginAtZero:true,min:0,suggestedMax:Math.max(t*1.6,...nums,1)};
+    mkChart('qk_'+i,{type:'line',data:{labels:ks.map(x=>x.label),datasets:[
+      {data:vals,borderColor:acc,backgroundColor:acc,borderWidth:2,pointRadius:vals.map(v=>fail(v)?4:2.5),pointBackgroundColor:vals.map(v=>fail(v)?css('--bad'):acc),spanGaps:true,tension:.25},
+      {data:ks.map(()=>t),borderColor:css('--muted'),borderDash:[4,4],borderWidth:1.2,pointRadius:0,pointHitRadius:0}]},
+      options:{...chartBase(),plugins:{...chartBase().plugins,tooltip:{...chartBase().plugins.tooltip,filter:c=>c.datasetIndex===0,displayColors:false,callbacks:{label:c=>`${fmtP(c.raw)}${suf} (เกณฑ์ ${ge?'≥':'≤'} ${fmtP(t)}${suf})`}}},
+        scales:{x:{...chartBase().scales.x,ticks:{...chartBase().scales.x.ticks,font:{size:10},maxRotation:0,autoSkip:true}},y:{...chartBase().scales.y,...y,ticks:{...chartBase().scales.y.ticks,precision:undefined,callback:v=>fmtP(v)+(k.unit==='pct'?'%':'')}}}}})});
+
+  // extra categories (bars)
+  const xc=cfg.cats.filter(c=>c.view==='bars');
+  $('#extraPanel').hidden=!xc.length;
+  $('#extra').innerHTML=xc.map(c=>{const parts=c.items.map(it=>({it,n:sumCat(K,c.id,x=>x===it)}));const s=sumCat(K,c.id);const mx=Math.max(1,...parts.map(p=>p.n||0));
+    return `<div><h3 class="h3s">${esc(c.name)} <span class="sv">· รวม ${fmt(s)}</span></h3>${s==null?'<div class="sub">ยังไม่มีข้อมูลในช่วงนี้</div>':parts.map(p=>`<div class="hb"><span>${esc(p.it)}</span><b>${fmt(p.n)}</b><i style="width:${(p.n||0)/mx*100}%"></i></div>`).join('')}</div>`}).join('');
+
+  // complications table
+  const ci=catItems('comp');
+  const row=(lab,arr,cls='')=>`<tr class="${cls}"><td>${lab}</td>${arr.map(v=>`<td class="${v==null||v===0?'zero':''}">${v==null?'—':fmt(v)}</td>`).join('')}</tr>`;
+  let h=`<thead><tr><th>ภาวะแทรกซ้อน</th>${ks.map(k=>`<th>${k.label}</th>`).join('')}<th>รวม</th></tr></thead><tbody>`;
+  for(const it of ci){const arr=ks.map(k=>val(k.key,'comp',it));const s=arr.reduce((a,b)=>a+(b||0),0);
+    h+=`<tr><td>${esc(it)}</td>${arr.map(v=>`<td class="${v==null||v===0?'zero':'hot'}">${v==null?'—':fmt(v)}</td>`).join('')}<td class="${s?'hot':'zero'}">${fmt(s)}</td></tr>`}
+  const ct=ks.map(k=>sumCat([k.key],'comp')), tt=ks.map(k=>totalOf([k.key]));
+  h+=row('รวม',[...ct,ct.reduce((a,b)=>a+(b||0),0)],'tot');
+  h+=`<tr><td>อัตรา (%)</td>${ks.map((k,i)=>`<td>${ct[i]!=null&&tt[i]?fmtP(ct[i]/tt[i]*100):'—'}</td>`).join('')}<td>${fmtP(compR)}</td></tr></tbody>`;
+  $('#compTable').innerHTML=h;
+}
+function totalColo(k){return sumCat([k],'proc',isColo)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- data table ---------- */
+let csvRows=[];
+function renderData(){
+  const ks=periodKeys(year,mode);
+  $('#dataHint').textContent=(mode==='fy'?'ปีงบประมาณ ':'ปี ')+year+(Object.keys(real).length?'':' · ข้อมูลตัวอย่าง');
+  let h=`<thead><tr><th>รายการ</th>${ks.map(k=>`<th>${k.label} ${String(k.y).slice(2)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>`;
+  csvRows=[['หมวด','รายการ',...ks.map(k=>TH_M[k.m-1]+' '+k.y),'รวม']];
+  for(const c of cfg.cats){h+=`<tr class="cat"><td colspan="${ks.length+2}">${esc(c.name)}</td></tr>`;
+    for(const it of c.items){const arr=ks.map(k=>val(k.key,c.id,it));const s=arr.some(v=>v!=null)?arr.reduce((a,b)=>a+(b||0),0):null;
+      h+=`<tr><td>${esc(it)}</td>${arr.map(v=>`<td class="${v?'':'zero'}">${v==null?'—':fmt(v)}</td>`).join('')}<td><b>${fmt(s)}</b></td></tr>`;
+      csvRows.push([c.name,it,...arr.map(v=>v??''),s??''])}
+    const tot=ks.map(k=>sumCat([k.key],c.id));h+=`<tr class="tot"><td>รวม${esc(c.name)}</td>${tot.map(v=>`<td>${fmt(v)}</td>`).join('')}<td>${fmt(tot.reduce((a,b)=>a+(b||0),0)||null)}</td></tr>`}
+  $('#dataTable').innerHTML=h+'</tbody>';
+}
+$('#csvBtn').onclick=async()=>{
+  const csv='﻿'+csvRows.map(r=>r.map(x=>{x=String(x);return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(',')).join('\n');
+  try{const dl=await claude.use('downloads');if(!dl){toast('ดาวน์โหลดไม่ได้ในมุมมองนี้');return}
+    await dl.save({filename:`endoscopy-stats-${mode==='fy'?'FY':''}${year}.csv`,data:new Blob([csv],{type:'text/csv'})});}catch(e){if(e&&e.code!=='cancelled')toast('ดาวน์โหลดไม่สำเร็จ')}};
+
+/* ---------- entry ---------- */
+let eKey=null, eDirty=false;
+function buildEntrySelectors(){
+  if(!eKey){let m=nowM-1,y=nowBE;if(m<1){m=12;y--}eKey=keyOf(y,m)}
+  const ys=[...new Set([...(cfg.years.cal||[]),+eKey.split('-')[0]])].sort((a,b)=>b-a);
+  $('#eYear').innerHTML=ys.map(y=>`<option value="${y}">พ.ศ. ${y}</option>`).join('');
+  $('#eMonth').innerHTML=TH_MF.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  if(!eKey){let m=nowM-1,y=nowBE;if(m<1){m=12;y--}eKey=keyOf(y,m)}
+  const [y,m]=eKey.split('-');$('#eYear').value=y;$('#eMonth').value=+m;
+}
+function onEntryPick(){if(eDirty&&!askDiscard())return;eKey=keyOf(+$('#eYear').value,+$('#eMonth').value);renderEntry()}
+function askDiscard(){showConfirm('ยังไม่ได้บันทึกการแก้ไข ต้องการทิ้งการแก้ไขหรือไม่?','ทิ้งการแก้ไข',()=>{eDirty=false;eKey=keyOf(+$('#eYear').value,+$('#eMonth').value);renderEntry()},()=>buildEntrySelectors());return false}
+$('#eYear').onchange=onEntryPick;$('#eMonth').onchange=onEntryPick;
+function showConfirm(msg,okLabel,onOk,onCancel){const box=$('#eConfirm');box.hidden=false;
+  box.innerHTML=`<div class="confirm"><span style="flex:1">${msg}</span><button class="btn" type="button" id="cfNo">ยกเลิก</button><button class="btn danger" type="button" id="cfYes">${okLabel}</button></div>`;
+  $('#cfNo').onclick=()=>{box.hidden=true;onCancel&&onCancel()};$('#cfYes').onclick=()=>{box.hidden=true;onOk()};}
+function renderEntry(){
+  $('#eConfirm').hidden=true;
+  const d=real[eKey], v=(d&&d.v)||{};
+  $('#eGrid').innerHTML=cfg.cats.map(c=>`<div class="panel ecat"><h3>${esc(c.name)}<span data-sum="${c.id}">0</span></h3><div class="hint">${esc(c.hint||'')}</div>
+    ${c.items.map((it,i)=>{const id=`in_${c.id}_${i}`;const x=v[c.id+'|'+it];return `<div class="erow"><label for="${id}">${esc(it)}</label><input type="number" inputmode="numeric" min="0" step="1" id="${id}" data-cat="${c.id}" data-item="${esc(it)}" value="${x==null?'':x}" placeholder="0"></div>`}).join('')}</div>`).join('');
+  $('#eNote').value=(d&&d.note)||'';
+  renderEntryDocs(v);
+  $$('#eGrid input, #eDocs input').forEach(inp=>inp.oninput=()=>{eDirty=true;updateEntryChecks()});
+  $('#eNote').oninput=()=>{eDirty=true;updateEntryChecks()};
+  eDirty=false;updateEntryChecks();
+  $('#eDelete').hidden=!d;
+}
+const DQ=[['#cecum','ถึง Cecum'],['#adenoma','พบ Adenoma'],['#comp','ภาวะแทรกซ้อน']];
+function entryDoctors(v){return (cfg.doctors||[]).map((d,i)=>({d,i})).filter(({d})=>d.active!==false||Object.keys(v).some(k=>k.startsWith('d.'+d.id+'|')))
+  .sort((a,b)=>deptOrder(a.d.dept)-deptOrder(b.d.dept)||a.i-b.i).map(x=>x.d)}
+function renderEntryDocs(v){
+  const docs=entryDoctors(v),P=catItems('proc');
+  $('#eDocsEmpty').hidden=!!docs.length;$('#eDocsWrap').hidden=!docs.length;
+  if(!docs.length){$('#eDocs').innerHTML='';return}
+  const cols=[...P.map(p=>[p,p]),...DQ];
+  let h=`<thead><tr><th>แพทย์</th>${P.map(p=>`<th>${esc(p)}</th>`).join('')}${DQ.map(q=>`<th class="q">${q[1]}</th>`).join('')}<th>รวมหัตถการ</th></tr></thead><tbody>`;
+  let lastDept=null;
+  docs.forEach((d,r)=>{const dk=deptInfo(d.dept)[0];if(dk!==lastDept){lastDept=dk;h+=`<tr class="cat"><td colspan="${cols.length+2}">${deptInfo(dk)[1]}</td></tr>`}
+    h+=`<tr><td>${esc(d.name)}</td>${cols.map(([it,lab],c)=>{const x=v['d.'+d.id+'|'+it];return `<td><input type="number" min="0" step="1" inputmode="numeric" id="ed_${d.id}_${c}" aria-label="${esc(d.name)} ${esc(lab)}" data-cat="d.${d.id}" data-item="${esc(it)}" value="${x==null?'':x}" placeholder="0"></td>`}).join('')}<td data-dtot="${d.id}">0</td></tr>`});
+  h+=`<tr class="tot"><td>รวมทุกแพทย์</td>${cols.map(([it])=>`<td data-csum="${esc(it)}">0</td>`).join('')}<td data-csum="#all">0</td></tr>`;
+  h+=`<tr><td>ยอดหน่วยงาน</td>${cols.map(([it])=>`<td data-unit="${esc(it)}">0</td>`).join('')}<td data-unit="#all">0</td></tr></tbody>`;
+  $('#eDocs').innerHTML=h;
+}
+function entryValues(){const v={};$$('#eGrid input, #eDocs input').forEach(i=>{if(i.value!=='')v[i.dataset.cat+'|'+i.dataset.item]=Math.max(0,Math.round(+i.value))});return v}
+function updateEntryChecks(){
+  const v=entryValues(), S=id=>catItems(id).reduce((a,it)=>a+(v[id+'|'+it]||0),0);
+  cfg.cats.forEach(c=>{const el=document.querySelector(`[data-sum="${c.id}"]`);if(el)el.textContent='รวม '+fmt(S(c.id))});
+  const tot=S('proc'), colo=catItems('proc').filter(isColo).reduce((a,it)=>a+(v['proc|'+it]||0),0), out=[];
+  for(const id of ['ctype','adm','tech']){const s=S(id),n=cfg.cats.find(c=>c.id===id)?.name;if(s&&tot&&s!==tot)out.push(`<span class="chip warn">! ${esc(n)}รวม ${fmt(s)} ไม่เท่ากับหัตถการรวม ${fmt(tot)}</span>`)}
+  const cec=v['qual|ถึง Cecum']||0,ad=v['qual|พบ Adenoma']||0,pr=S('prep');
+  if(cec>colo)out.push(`<span class="chip warn">! ถึง Cecum (${fmt(cec)}) มากกว่าจำนวน Colonoscopy (${fmt(colo)})</span>`);
+  if(ad>colo)out.push(`<span class="chip warn">! พบ Adenoma (${fmt(ad)}) มากกว่าจำนวน Colonoscopy (${fmt(colo)})</span>`);
+  if(pr&&pr!==colo)out.push(`<span class="chip warn">! Bowel preparation รวม ${fmt(pr)} ไม่เท่ากับ Colonoscopy ${fmt(colo)}</span>`);
+  const docs=entryDoctors(v),P=catItems('proc');
+  if(docs.length){
+    const dIt=it=>docs.reduce((a,d)=>a+(v['d.'+d.id+'|'+it]||0),0);
+    const unitOf=it=>it==='#all'?tot:it==='#cecum'?cec:it==='#adenoma'?ad:it==='#comp'?S('comp'):(v['proc|'+it]||0);
+    const docOf=it=>it==='#all'?P.reduce((a,p)=>a+dIt(p),0):dIt(it);
+    const anyDoc=Object.keys(v).some(k=>k.startsWith('d.'));
+    $$('[data-dtot]').forEach(td=>{const id=td.dataset.dtot;td.textContent=fmt(P.reduce((a,p)=>a+(v['d.'+id+'|'+p]||0),0))});
+    $$('[data-csum]').forEach(td=>{const it=td.dataset.csum;td.textContent=fmt(docOf(it));td.classList.toggle('hot',anyDoc&&docOf(it)!==unitOf(it))});
+    $$('[data-unit]').forEach(td=>td.textContent=fmt(unitOf(td.dataset.unit)));
+    if(anyDoc){
+      const mm=[...P,'#cecum','#adenoma','#comp'].filter(it=>dIt(it)!==unitOf(it)).map(it=>`${it[0]==='#'?DQ.find(q=>q[0]===it)[1]:it} (${dIt(it)}/${unitOf(it)})`);
+      if(mm.length)out.push(`<span class="chip warn">! รายแพทย์รวมไม่ตรงกับยอดหน่วยงาน: ${esc(mm.join(', '))}</span>`);
+      docs.forEach(d=>{const c=P.filter(isColo).reduce((a,p)=>a+(v['d.'+d.id+'|'+p]||0),0);const x=v['d.'+d.id+'|#cecum']||0,y=v['d.'+d.id+'|#adenoma']||0;
+        if(x>c||y>c)out.push(`<span class="chip warn">! ${esc(d.name)}: ถึง Cecum/พบ Adenoma มากกว่าจำนวน Colonoscopy (${fmt(c)})</span>`)});
+    }
+  }
+  if(tot&&!out.length)out.push(`<span class="chip good">✓ ตัวเลขสอดคล้องกัน · หัตถการรวม ${fmt(tot)} ราย · Colonoscopy ${fmt(colo)} ราย</span>`);
+  $('#eChecks').innerHTML=out.join('');
+  const d=real[eKey];
+  const st=$('#eStatus');st.className='status'+(eDirty?' dirty':'');
+  st.textContent=eDirty?'มีการแก้ไขที่ยังไม่บันทึก':d?('บันทึกล่าสุด '+(d.at?new Date(d.at).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):'')):'ยังไม่มีข้อมูลเดือนนี้';
+}
+async function saveEntry(){
+  if(!db){toast('ยังเชื่อมต่อฐานข้อมูลไม่ได้ ลองเปิดหน้านี้ใหม่');return}
+  const [y,m]=eKey.split('-').map(Number), v=entryValues();
+  const btns=[$('#eSave'),$('#eSave2')];btns.forEach(b=>b.disabled=true);
+  try{let by=null;try{by=user&&user.id?await user.id():null}catch(e){}
+    await db.doc('months/'+eKey).set({y,m,v,note:$('#eNote').value.trim(),at:new Date().toISOString(),by});
+    eDirty=false;toast(`บันทึก ${TH_MF[m-1]} ${y} แล้ว`);}
+  catch(e){toast(e&&/permission|not_granted|denied|invalid_argument/i.test((e.code||'')+(e.message||''))?'คุณไม่มีสิทธิ์บันทึก ขอสิทธิ์แก้ไขจากเจ้าของหน้า':'บันทึกไม่สำเร็จ: '+(e.message||e.code||''))}
+  finally{btns.forEach(b=>b.disabled=false);updateEntryChecks()}
+}
+$('#eSave').onclick=saveEntry;$('#eSave2').onclick=saveEntry;
+$('#eDelete').onclick=()=>{const [y,m]=eKey.split('-').map(Number);showConfirm(`ลบข้อมูล ${TH_MF[m-1]} ${y} ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`,'ลบข้อมูล',async()=>{
+  try{await db.doc('months/'+eKey).delete();toast('ลบข้อมูลแล้ว')}catch(e){toast('ลบไม่สำเร็จ')}})};
+$('#eCopy').onclick=()=>{let [y,m]=eKey.split('-').map(Number);m--;if(m<1){m=12;y--}const p=real[keyOf(y,m)];
+  if(!p){toast('ไม่มีข้อมูลเดือนก่อนหน้า');return}
+  showConfirm('นำตัวเลขเดือนก่อนมาใส่เป็นค่าตั้งต้น (แก้ไขต่อได้ก่อนบันทึก)?','นำมาใส่',()=>{$$('#eGrid input, #eDocs input').forEach(i=>{const x=p.v[i.dataset.cat+'|'+i.dataset.item];i.value=x==null?'':x});eDirty=true;updateEntryChecks()})};
+
+/* ---------- setup ---------- */
+let sDraft=null,sDirty=false,sNewId=null;
+const VIEW_OPTS=[['share','แถบสัดส่วน 100% (ร่วมกับสัดส่วนผู้ป่วย)'],['bars','กราฟแท่งจำนวน (สถิติหมวดอื่นๆ)'],['none','ไม่แสดงในภาพรวม (เก็บข้อมูลอย่างเดียว)']];
+function renderSetup(){if(!sDirty)sDraft=normalizeCfg(structuredClone(cfg));renderSetupFromDraft()}
+function renderSetupFromDraft(){$('#sUnit').value=sDraft.unit;drawYears();drawCats();drawKpis();setSStatus()}
+$('#yFyStart').innerHTML=TH_MF.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+function drawYears(){const Y=sDraft.years;
+  const chips=(k,L)=>L.length?L.map(y=>`<span class="ychip">${y}<button type="button" data-yr-del="${k}|${y}" aria-label="ลบปี ${y}">×</button></span>`).join(''):'<span class="sub">ยังไม่มีปี</span>';
+  $('#yCal').innerHTML=chips('cal',Y.cal);$('#yFy').innerHTML=chips('fy',Y.fy);
+  $('#yFyStart').value=Y.fyStart;$('#yMode').value=Y.mode;
+  const S=Y.fyStart,ex=Y.fy[0]||fyOf(nowBE,nowM);
+  $('#yFyPrev').textContent=S===1?`ปีงบประมาณ ${ex} = ม.ค. – ธ.ค. ${ex} (ตรงกับปีปฏิทิน)`:`ปีงบประมาณ ${ex} = ${TH_MF[S-1]} ${ex-1} – ${TH_MF[S-2]} ${ex}`}
+function addYear(k){const inp=$(k==='cal'?'#yCalIn':'#yFyIn'),v=+inp.value;
+  if(!Number.isInteger(v)||v<2400||v>2700){toast('กรุณาใส่ปี พ.ศ. 4 หลัก เช่น 2570');return}
+  const L=sDraft.years[k];if(L.includes(v)){toast(`มีปี ${v} อยู่แล้ว`);return}
+  L.push(v);L.sort((a,b)=>b-a);inp.value='';sMark();drawYears()}
+$('#yCalAdd').onclick=()=>addYear('cal');$('#yFyAdd').onclick=()=>addYear('fy');
+$('#yCalIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addYear('cal')}});
+$('#yFyIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addYear('fy')}});
+$('#yCal').parentElement.parentElement.addEventListener('click',e=>{const b=e.target.closest('[data-yr-del]');if(!b)return;const [k,y]=b.dataset.yrDel.split('|');
+  sDraft.years[k]=sDraft.years[k].filter(x=>x!==+y);sMark();drawYears()});
+$('#yFyStart').onchange=e=>{sDraft.years.fyStart=+e.target.value;sMark();drawYears()};
+$('#yMode').onchange=e=>{sDraft.years.mode=e.target.value;sMark()};
+function setSStatus(msg){const st=$('#sStatus');st.className='status'+(sDirty||msg?' dirty':'');st.textContent=msg||(sDirty?'มีการแก้ไขที่ยังไม่บันทึก':'ตั้งค่าตรงกับที่บันทึกไว้');$('#sCancel').hidden=!sDirty}
+const sMark=()=>{sDirty=true;setSStatus()};
+function catHasData(id){return Object.values(real).some(m=>m.v&&Object.keys(m.v).some(k=>k.startsWith(id+'|')))}
+function drawCats(){
+  $('#sCats').innerHTML=sDraft.cats.map((c,i)=>{const p=`sc_${c.id}`;return `<div class="scard${c.id===sNewId?' new':''}" data-ci="${i}">
+    <div class="top"><input type="text" id="${p}_name" data-f="name" value="${esc(c.name)}" aria-label="ชื่อหมวด">
+      ${c.locked?'<span class="tag">ใช้คำนวณตัวชี้วัดหลัก</span>':''}${c.custom?'<span class="tag acc">เพิ่มเอง</span>':''}
+      <button type="button" class="ibtn" data-act="up" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button><button type="button" class="ibtn" data-act="down" aria-label="เลื่อนลง" ${i<sDraft.cats.length-1?'':'disabled'}>↓</button>
+      ${c.custom?'<button type="button" class="ibtn del" data-act="del">ลบหมวด</button>':''}</div>
+    <div class="field"><label for="${p}_hint">คำอธิบายในหน้ากรอกข้อมูล</label><input type="text" id="${p}_hint" data-f="hint" value="${esc(c.hint||'')}" placeholder="ไม่บังคับ"></div>
+    <div class="field"><label for="${p}_items">รายการ (1 บรรทัดต่อ 1 รายการ)</label><textarea id="${p}_items" data-f="items" ${c.locked?'readonly style="opacity:.65"':''} placeholder="เช่น&#10;Time-out ครบถ้วน&#10;ผู้ป่วยทั้งหมดที่ตรวจสอบ">${esc(c.items.join('\n'))}</textarea>${c.locked?'<small>รายการในหมวดนี้ใช้คำนวณตัวชี้วัดหลัก จึงแก้ไม่ได้</small>':''}</div>
+    ${FIXED_VIEW.includes(c.id)?`<small class="sub">${c.id==='proc'?'แสดงเป็นกราฟสัดส่วนหัตถการเสมอ':'แสดงเป็นตารางภาวะแทรกซ้อนเสมอ'}</small>`
+      :`<div class="field"><label for="${p}_view">แสดงในหน้าภาพรวมเป็น</label><select id="${p}_view" data-f="view">${VIEW_OPTS.map(o=>`<option value="${o[0]}" ${c.view===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div>`}
+  </div>`}).join('');
+}
+function refsText(refs){return refs.length?refs.map(r=>refLabel(r,sDraft.cats)).join(' + '):'เลือกรายการ…'}
+function pickerHTML(k,w){
+  const refs=k[w];
+  const box=(ref,label)=>`<label><input type="checkbox" data-ref="${esc(ref)}" data-w="${w}" ${refs.includes(ref)?'checked':''}> ${esc(label)}</label>`;
+  return `<details class="picker"><summary id="sum_${k.id}_${w}" class="${refs.length?'':'emp'}">${esc(refsText(refs))}</summary><div class="opts">
+    <div class="g">ยอดรวม</div>${box('@total','หัตถการทั้งหมด')}${box('@colo','Colonoscopy ทั้งหมด (รวม EGD & Colonoscopy)')}
+    ${sDraft.cats.map(c=>`<div class="g">${esc(c.name)}</div>${box(c.id+'|*','ทุกรายการในหมวดนี้รวมกัน')}${c.items.map(it=>box(c.id+'|'+it,it)).join('')}`).join('')}</div></details>`;
+}
+function drawKpis(){
+  $('#sKpis').innerHTML=sDraft.kpis.map((k,j)=>{const p=`sk_${k.id}`;return `<div class="scard${k.id===sNewId?' new':''}" data-ki="${j}">
+    <div class="top"><input type="text" id="${p}_name" data-f="name" value="${esc(k.name)}" placeholder="ชื่อตัวชี้วัด" aria-label="ชื่อตัวชี้วัด">${k.builtin?'<span class="tag">ตัวชี้วัดหลัก</span>':'<span class="tag acc">เพิ่มเอง</span><button type="button" class="ibtn del" data-act="del">ลบ</button>'}</div>
+    <div class="formula"><span>ตัวตั้ง</span>${k.builtin?`<div class="fixedf">${esc(refsText(k.num))}</div>`:pickerHTML(k,'num')}
+      <span>ตัวหาร</span>${k.builtin?`<div class="fixedf">${esc(refsText(k.den))}</div>`:pickerHTML(k,'den')}</div>
+    <div class="frow">
+      <div class="field"><label for="${p}_dir">เกณฑ์เป้าหมาย</label><div style="display:flex;gap:6px"><select id="${p}_dir" data-f="dir"><option value="ge" ${k.dir!=='le'?'selected':''}>≥ ไม่น้อยกว่า</option><option value="le" ${k.dir==='le'?'selected':''}>≤ ไม่เกิน</option></select><input type="number" id="${p}_target" data-f="target" value="${isFinite(k.target)?k.target:''}" step="0.1" min="0" style="width:90px" aria-label="ค่าเกณฑ์"></div></div>
+      <div class="field"><label for="${p}_unit">หน่วย</label><select id="${p}_unit" data-f="unit"><option value="pct" ${k.unit!=='per1000'?'selected':''}>ร้อยละ (%)</option><option value="per1000" ${k.unit==='per1000'?'selected':''}>ต่อ 1,000</option></select></div>
+    </div>
+    <label class="act"><input type="checkbox" id="${p}_pin" data-f="pin" ${k.pin?'checked':''}> แสดงเป็นตัวเลขเด่นแถวบนสุดของหน้าภาพรวม</label>
+  </div>`}).join('')||'<div class="empty">ยังไม่มีตัวชี้วัด</div>';
+}
+const sec=$('#setupSec');
+sec.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='sUnit'){sDraft.unit=t.value;sMark();return}
+  const cc=t.closest('[data-ci]'),kc=t.closest('[data-ki]');
+  if(cc&&t.dataset.f){const c=sDraft.cats[+cc.dataset.ci],f=t.dataset.f;
+    if(f==='items'){if(c.locked)return;c.items=[...new Set(t.value.split('\n').map(s=>s.trim()).filter(Boolean))]}else c[f]=t.value;sMark();return}
+  if(kc){const k=sDraft.kpis[+kc.dataset.ki];
+    if(t.dataset.ref){const w=t.dataset.w,r=t.dataset.ref;if(t.checked){if(!k[w].includes(r))k[w].push(r)}else k[w]=k[w].filter(x=>x!==r);
+      const s=document.getElementById(`sum_${k.id}_${w}`);s.textContent=refsText(k[w]);s.classList.toggle('emp',!k[w].length);sMark();return}
+    const f=t.dataset.f;if(!f)return;
+    if(f==='pin')k.pin=t.checked;else if(f==='target')k.target=t.value===''?NaN:parseFloat(t.value);else k[f]=t.value;sMark()}
+});
+sec.addEventListener('change',e=>{const t=e.target;if(t.closest('[data-ci]')&&(t.dataset.f==='items'||t.dataset.f==='name'))drawKpis()});
+sec.addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(!b||b.disabled)return;
+  const cc=b.closest('[data-ci]'),kc=b.closest('[data-ki]');
+  if(cc){const i=+cc.dataset.ci,a=b.dataset.act,L=sDraft.cats;
+    if(a==='up')[L[i-1],L[i]]=[L[i],L[i-1]];
+    else if(a==='down')[L[i+1],L[i]]=[L[i],L[i+1]];
+    else if(a==='del'){const c=L[i];const used=sDraft.kpis.filter(k=>[...k.num,...k.den].some(r=>r.startsWith(c.id+'|')));
+      if(used.length){toast(`ลบไม่ได้: ตัวชี้วัด “${used.map(k=>k.name||'(ไม่มีชื่อ)').join('”, “')}” ใช้หมวดนี้อยู่`);return}
+      const go=()=>{L.splice(i,1);sMark();drawCats();drawKpis()};
+      if(catHasData(c.id)){showSConfirm(`หมวด “${esc(c.name)}” มีข้อมูลบันทึกไว้แล้ว ถ้าลบ ข้อมูลเดิมจะไม่แสดงอีก`,'ลบหมวด',go);return}
+      go();return}
+    sMark();drawCats();drawKpis();return}
+  if(kc&&b.dataset.act==='del'){sDraft.kpis.splice(+kc.dataset.ki,1);sMark();drawKpis()}
+});
+function showSConfirm(msg,ok,fn){const box=$('#sConfirm');box.hidden=false;
+  box.innerHTML=`<div class="confirm"><span style="flex:1">${msg}</span><button class="btn" type="button" id="scNo">ยกเลิก</button><button class="btn danger" type="button" id="scYes">${ok}</button></div>`;
+  $('#scNo').onclick=()=>box.hidden=true;$('#scYes').onclick=()=>{box.hidden=true;fn()}}
+$('#sAddCat').onclick=()=>{const id='c'+Date.now().toString(36);sDraft.cats.push({id,name:'หมวดใหม่',hint:'',items:[],view:'bars',custom:true});sNewId=id;sMark();drawCats();drawKpis();
+  const el=document.getElementById(`sc_${id}_name`);if(el){el.scrollIntoView({block:'center'});el.focus();el.select()}};
+$('#sAddKpi').onclick=()=>{const id='k'+Date.now().toString(36);sDraft.kpis.push({id,name:'',num:[],den:[],unit:'pct',dir:'ge',target:80,pin:false,builtin:false});sNewId=id;sMark();drawKpis();
+  const el=document.getElementById(`sk_${id}_name`);if(el){el.scrollIntoView({block:'center'});el.focus()}};
+$('#sCancel').onclick=()=>{sDirty=false;sNewId=null;$('#sConfirm').hidden=true;renderSetup()};
+$('#sReset').onclick=()=>showSConfirm('คืนหมวดสถิติและตัวชี้วัดเป็นค่าเริ่มต้น? หมวดและตัวชี้วัดที่เพิ่มเองจะถูกนำออก (ชื่อหน่วยงานและรายชื่อแพทย์ไม่เปลี่ยน) และยังไม่มีผลจนกว่าจะกดบันทึก','คืนค่าเริ่มต้น',
+  ()=>{sDraft=normalizeCfg({unit:sDraft.unit,doctors:sDraft.doctors,years:sDraft.years});sNewId=null;sMark();renderSetupFromDraft()});
+$('#sSave').onclick=async()=>{
+  const d=sDraft,errs=[];
+  d.unit=(d.unit||'').trim()||DEFAULT_CFG.unit;
+  d.cats.forEach(c=>c.name=(c.name||'').trim());d.kpis.forEach(k=>k.name=(k.name||'').trim());
+  if(d.cats.some(c=>!c.name))errs.push('มีหมวดที่ยังไม่ได้ตั้งชื่อ');
+  const cn=d.cats.map(c=>c.name);if(new Set(cn).size!==cn.length)errs.push('มีชื่อหมวดซ้ำกัน');
+  const empty=d.cats.filter(c=>!c.items.length);if(empty.length)errs.push(`หมวด “${empty.map(c=>c.name).join('”, “')}” ยังไม่มีรายการ`);
+  if(d.kpis.some(k=>!k.name))errs.push('มีตัวชี้วัดที่ยังไม่ได้ตั้งชื่อ');
+  const nf=d.kpis.filter(k=>!k.num.length||!k.den.length);if(nf.length)errs.push(`ตัวชี้วัด “${nf.map(k=>k.name||'(ไม่มีชื่อ)').join('”, “')}” ยังไม่ได้เลือกตัวตั้งหรือตัวหาร`);
+  if(d.kpis.some(k=>!isFinite(k.target)))errs.push('มีตัวชี้วัดที่ยังไม่ได้ใส่ค่าเกณฑ์');
+  if(!d.years.cal.length)errs.push('ต้องมีปีปฏิทินอย่างน้อย 1 ปี');
+  if(!d.years.fy.length)errs.push('ต้องมีปีงบประมาณอย่างน้อย 1 ปี');
+  const ok=r=>{if(r[0]==='@')return true;const i=r.indexOf('|'),c=d.cats.find(x=>x.id===r.slice(0,i)),it=r.slice(i+1);return !!c&&(it==='*'||c.items.includes(it))};
+  const br=d.kpis.filter(k=>![...k.num,...k.den].every(ok));if(br.length)errs.push(`ตัวชี้วัด “${br.map(k=>k.name).join('”, “')}” อ้างถึงรายการที่ถูกลบหรือเปลี่ยนชื่อ กรุณาเลือกใหม่`);
+  if(errs.length){setSStatus('บันทึกไม่ได้: '+errs.join(' · '));toast(errs[0]);return}
+  if(!db){toast('ยังเชื่อมต่อฐานข้อมูลไม่ได้');return}
+  $('#sSave').disabled=true;
+  try{const n=normalizeCfg(d);n.doctors=cfg.doctors;await db.doc('config/main').set({cfg:JSON.stringify(n),at:new Date().toISOString()});sDirty=false;sNewId=null;toast('บันทึกการตั้งค่าแล้ว');renderSetup()}
+  catch(e){toast('บันทึกไม่สำเร็จ: คุณอาจไม่มีสิทธิ์แก้ไข')}
+  finally{$('#sSave').disabled=false}};
+
+/* ---------- doctors ---------- */
+const DEMO_DOCS=[{id:'demo1',name:'นพ.ตัวอย่าง ก',dept:'med'},{id:'demo2',name:'พญ.ตัวอย่าง ข',dept:'med'},{id:'demo3',name:'นพ.ตัวอย่าง ค',dept:'surg'},{id:'demo4',name:'พญ.ตัวอย่าง ง',dept:'med'},{id:'demo5',name:'นพ.ตัวอย่าง จ',dept:'surg'}];
+const DEPTS=[['med','อายุรกรรม','อายุรฯ','--s1'],['surg','ศัลยกรรม','ศัลยฯ','--s2']];
+const deptInfo=k=>DEPTS.find(d=>d[0]===k)||['','ไม่ระบุแผนก','ไม่ระบุ','--muted'];
+const dtag=k=>{const d=deptInfo(k);return `<span class="dtag" style="--c:var(${d[3]})">${d[2]}</span>`};
+const deptOrder=k=>{const i=DEPTS.findIndex(d=>d[0]===k);return i<0?9:i};
+let docFilter='all';
+function gstats(keys,ids){let tot=null,colo=0,cec=null,adn=null,comp=null;const add=(a,b)=>b==null?a:(a||0)+b;
+  ids.forEach(id=>{tot=add(tot,dsum(keys,id));colo+=dsum(keys,id,isColo)||0;cec=add(cec,dq(keys,id,'#cecum'));adn=add(adn,dq(keys,id,'#adenoma'));comp=add(comp,dq(keys,id,'#comp'))});
+  return{tot,colo,cec:cec==null||!colo?null:pct(cec,colo),adr:adn==null||!colo?null:pct(adn,colo),comp,compR:tot&&comp!=null?comp/tot*100:null}}
+$$('#deptSeg [data-dept]').forEach(b=>b.onclick=()=>{docFilter=b.dataset.dept;renderDoctors()});
+const SMALL_N=30;
+const isDemo=()=>!Object.keys(real).length;
+function viewDoctors(){return cfg.doctors&&cfg.doctors.length?cfg.doctors:(isDemo()?DEMO_DOCS:[])}
+function dsum(keys,id,filter){let s=0,any=false;for(const k of keys)for(const it of catItems('proc')){if(filter&&!filter(it))continue;const v=val(k,'d.'+id,it);if(v!=null){s+=v;any=true}}return any?s:null}
+function dq(keys,id,it){let s=0,any=false;for(const k of keys){const v=val(k,'d.'+id,it);if(v!=null){s+=v;any=true}}return any?s:null}
+function dstats(keys,id){const tot=dsum(keys,id),colo=dsum(keys,id,isColo)||0,cec=dq(keys,id,'#cecum'),adn=dq(keys,id,'#adenoma'),comp=dq(keys,id,'#comp');
+  return{tot,colo,cec:cec==null||!colo?null:pct(cec,colo),adr:adn==null||!colo?null:pct(adn,colo),comp,compR:tot&&comp!=null?comp/tot*100:null}}
+function qchip(v,t,n){if(v==null)return'<span class="chip none">—</span>';const ok=v>=t;
+  return `<span class="chip ${ok?'good':'bad'}">${ok?'✓':'!'} ${fmtP(v)}%</span>${n<SMALL_N?`<span class="nnote">n=${n}</span>`:''}`}
+let selDoc=null;
+function renderDoctors(){
+  renderDocManage();
+  if(typeof Chart==='undefined')return;
+  const K=sel().map(k=>k.key),ks=periodKeys(year,mode),T={cecal:targetOf('cecal'),adr:targetOf('adr'),comp:targetOf('comp')};
+  $$('#deptSeg [data-dept]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dept===docFilter));
+  const full=viewDoctors().filter(d=>d.active!==false||dsum(K,d.id)!=null);
+  const list=docFilter==='all'?full:full.filter(d=>(d.dept||'')===docFilter);
+  const stats=list.map(d=>({d,...dstats(K,d.id)})).filter(s=>s.tot!=null||s.d.active!==false).sort((a,b)=>(b.tot||0)-(a.tot||0));
+  const any=stats.some(s=>s.tot!=null);
+  $('#docEmptyText').textContent=docFilter!=='all'&&full.some(d=>dsum(K,d.id)!=null)?`ไม่มีข้อมูลแพทย์${deptInfo(docFilter)[1]}ในช่วงนี้ · กำหนดแผนกของแพทย์ได้ในส่วน “จัดการรายชื่อแพทย์” ด้านล่าง`:'ยังไม่มีข้อมูลรายแพทย์ในช่วงนี้ · เพิ่มรายชื่อแพทย์ในส่วน “จัดการรายชื่อแพทย์” ด้านล่าง แล้วกรอกจำนวนแยกรายแพทย์ได้ที่หน้า กรอกข้อมูล';
+  $('#docEmpty').hidden=any;$('#docMain').hidden=!any;
+  if(!any)return;
+  // department comparison (all departments view only)
+  $('#deptPanel').hidden=docFilter!=='all';
+  if(docFilter==='all'){
+    const groups=[...DEPTS.map(d=>d[0]),...(full.some(d=>!deptInfo(d.dept)[0])?['']:[])];
+    const gs=groups.map(g=>{const ids=full.filter(d=>deptInfo(d.dept)[0]===g).map(d=>d.id);return{g,ids,s:gstats(K,ids)}});
+    const gTot=gs.reduce((a,x)=>a+(x.s.tot||0),0);
+    $('#deptCards').innerHTML=gs.map(({g,ids,s})=>{const di=deptInfo(g);
+      const mix=catItems('proc').map(it=>({it,n:ids.reduce((a,id)=>a+(dsum(K,id,x=>x===it)||0),0)})).filter(o=>o.n).sort((a,b)=>b.n-a.n).slice(0,3);
+      return `<div class="dcard"><div class="dch"><i style="background:var(${di[3]})"></i><b>${di[1]}</b><span class="sv">${ids.length} ท่าน</span></div>
+        <div class="dcv">${fmt(s.tot)}<small>ราย</small></div><div class="sub">${gTot?fmtP(pct(s.tot||0,gTot))+'% ของหัตถการรายแพทย์ทั้งหมด':'—'}</div>
+        <dl class="dcl"><dt>Colonoscopy</dt><dd>${fmt(s.colo||null)}</dd><dt>Cecal intubation</dt><dd>${qchip(s.cec,T.cecal,s.colo)}</dd><dt>ADR</dt><dd>${qchip(s.adr,T.adr,s.colo)}</dd>
+          <dt>ภาวะแทรกซ้อน</dt><dd>${s.comp==null?'—':fmt(s.comp)+(s.compR!=null?` <span class="sv">(${fmtP(s.compR)}%)</span>`:'')}</dd></dl>
+        <div class="sub">หัตถการหลัก: ${mix.map(o=>`${esc(o.it)} ${fmtP(pct(o.n,s.tot))}%`).join(' · ')||'—'}</div></div>`}).join('');
+    $('#deptLegend').innerHTML=gs.map(({g})=>{const di=deptInfo(g);return `<span><i style="background:var(${di[3]})"></i>${di[1]}</span>`}).join('');
+    const Bd=chartBase();
+    mkChart('cDept',{type:'bar',data:{labels:ks.map(k=>k.label),datasets:gs.map(({g,ids})=>{const di=deptInfo(g);return{label:di[1],data:ks.map(k=>{const x=gstats([k.key],ids).tot;return x}),backgroundColor:css(di[3]),borderRadius:{topLeft:3,topRight:3},maxBarThickness:22}})},
+      options:{...Bd,interaction:{mode:'index',intersect:false},plugins:{...Bd.plugins,tooltip:{...Bd.plugins.tooltip,callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} ราย`}}}}});
+  }
+  const allTot=stats.reduce((a,s)=>a+(s.tot||0),0),maxTot=Math.max(1,...stats.map(s=>s.tot||0)),unitTot=totalOf(K);
+  $('#docCoverage').textContent=unitTot?`รวมรายแพทย์ ${fmt(allTot)} จากยอดหน่วยงาน ${fmt(unitTot)} ราย (${fmtP(pct(allTot,unitTot))}%)`:'';
+  if(!selDoc||!stats.some(s=>s.d.id===selDoc))selDoc=stats[0].d.id;
+  $('#docTable').innerHTML=`<thead><tr><th>แพทย์</th><th>หัตถการ</th><th>สัดส่วน</th><th>Colonoscopy</th><th>Cecal intubation<br><span class="sub">เกณฑ์ ≥ ${T.cecal}%</span></th><th>ADR<br><span class="sub">เกณฑ์ ≥ ${T.adr}%</span></th><th>ภาวะแทรกซ้อน</th></tr></thead><tbody>`+
+    stats.map(s=>`<tr data-doc="${s.d.id}" tabindex="0" class="${s.d.id===selDoc?'selrow':''}"><td>${esc(s.d.name)}${dtag(s.d.dept)}${s.d.active===false?' <span class="chip none">ไม่ได้ปฏิบัติงานแล้ว</span>':''}</td>
+      <td><b>${fmt(s.tot)}</b></td><td><span class="share"><div style="width:${(s.tot||0)/maxTot*100}%"></div></span><span class="sv">${fmtP(pct(s.tot||0,allTot))}%</span></td>
+      <td>${fmt(s.colo||null)}</td><td>${qchip(s.cec,T.cecal,s.colo)}</td><td>${qchip(s.adr,T.adr,s.colo)}</td>
+      <td class="${s.comp?'hot':'zero'}">${s.comp==null?'—':fmt(s.comp)}${s.compR!=null&&s.comp?` <span class="sv">(${fmtP(s.compR)}%)</span>`:''}</td></tr>`).join('')+'</tbody>';
+  $('#docSel').innerHTML=stats.map(s=>`<option value="${s.d.id}">${esc(s.d.name)}</option>`).join('');$('#docSel').value=selDoc;
+  const s=stats.find(x=>x.d.id===selDoc);
+  $('#docKpis').innerHTML=`
+    <div class="kpi"><div class="k">หัตถการทั้งหมด</div><div class="v">${fmt(s.tot)}<small>ราย</small></div><div class="d">${fmtP(pct(s.tot||0,allTot))}% ของแพทย์ทุกท่าน</div></div>
+    <div class="kpi"><div class="k">Colonoscopy</div><div class="v">${fmt(s.colo||null)}<small>ราย</small></div><div class="d">${s.colo<SMALL_N?'จำนวนน้อย อัตราอาจคลาดเคลื่อน':'&nbsp;'}</div></div>
+    <div class="kpi"><div class="k">Cecal intubation</div><div class="v">${fmtP(s.cec)}<small>%</small></div>${statusChip(s.cec,T.cecal,true)}</div>
+    <div class="kpi"><div class="k">Adenoma detection</div><div class="v">${fmtP(s.adr)}<small>%</small></div>${statusChip(s.adr,T.adr,true)}</div>
+    <div class="kpi"><div class="k">ภาวะแทรกซ้อน</div><div class="v">${fmt(s.comp)}<small>ครั้ง</small></div>${statusChip(s.compR,T.comp,false)}</div>`;
+  const acc=css('--accent'),B=chartBase();
+  mkChart('cDocVol',{type:'bar',data:{labels:ks.map(k=>k.label),datasets:[{data:ks.map(k=>dsum([k.key],selDoc)),backgroundColor:ks.map((k,i)=>month&&i!==month-1?css('--accent-soft'):acc),borderRadius:{topLeft:4,topRight:4},maxBarThickness:36}]},
+    options:{...B,plugins:{...B.plugins,tooltip:{...B.plugins.tooltip,displayColors:false,callbacks:{label:c=>`${fmt(c.raw)} ราย`}}}}});
+  const items=catItems('proc').map(it=>({it,n:dsum(K,selDoc,x=>x===it)||0})).filter(o=>o.n>0).sort((a,b)=>b.n-a.n);
+  $('#docMixBox').style.height=Math.max(160,items.length*28+30)+'px';
+  mkChart('cDocMix',{type:'bar',data:{labels:items.map(o=>o.it),datasets:[{data:items.map(o=>o.n),backgroundColor:acc,borderRadius:{topRight:4,bottomRight:4},barThickness:14}]},
+    options:{...B,indexAxis:'y',scales:{x:{...B.scales.y,grid:{color:css('--line-2')}},y:{...B.scales.x,ticks:{color:css('--ink-2'),font:{family:'IBM Plex Sans Thai',size:12}}}},
+      plugins:{...B.plugins,tooltip:{...B.plugins.tooltip,displayColors:false,callbacks:{label:c=>`${fmt(c.raw)} ราย · ${fmtP(pct(c.raw,s.tot))}%`}}}}});
+  const adrs=ks.map(k=>{const c=dsum([k.key],selDoc,isColo);const a=val(k.key,'d.'+selDoc,'#adenoma');return a==null||!c?null:Math.round(a/c*1000)/10});
+  const ns=ks.map(k=>dsum([k.key],selDoc,isColo)||0);
+  mkChart('cDocAdr',{type:'line',data:{labels:ks.map(k=>k.label),datasets:[
+    {data:adrs,borderColor:acc,backgroundColor:acc,borderWidth:2,spanGaps:true,tension:.25,pointRadius:adrs.map(v=>v!=null&&v<T.adr?4:2.5),pointBackgroundColor:adrs.map(v=>v!=null&&v<T.adr?css('--bad'):acc)},
+    {data:ks.map(()=>T.adr),borderColor:css('--muted'),borderDash:[4,4],borderWidth:1.2,pointRadius:0,pointHitRadius:0}]},
+    options:{...B,plugins:{...B.plugins,tooltip:{...B.plugins.tooltip,filter:c=>c.datasetIndex===0,displayColors:false,callbacks:{label:c=>`ADR ${fmtP(c.raw)}% (Colonoscopy ${ns[c.dataIndex]} ราย)`}}},
+      scales:{x:B.scales.x,y:{...B.scales.y,min:0,suggestedMax:Math.max(40,T.adr+10),ticks:{...B.scales.y.ticks,callback:v=>v+'%'}}}}});
+}
+$('#docTable').addEventListener('click',e=>{const tr=e.target.closest('tr[data-doc]');if(tr){selDoc=tr.dataset.doc;renderDoctors()}});
+$('#docTable').addEventListener('keydown',e=>{const tr=e.target.closest('tr[data-doc]');if(tr&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selDoc=tr.dataset.doc;renderDoctors();const n=document.querySelector(`tr[data-doc="${selDoc}"]`);n&&n.focus()}});
+$('#docSel').onchange=e=>{selDoc=e.target.value;renderDoctors()};
+
+let docDraft=[],docDirty=false;
+function hasDocData(id){return Object.values(real).some(m=>m.v&&Object.keys(m.v).some(k=>k.startsWith('d.'+id+'|')))}
+function renderDocManage(){if(docDirty)return;docDraft=structuredClone(cfg.doctors||[]);drawDocManage()}
+function drawDocManage(){
+  const box=$('#docList');
+  box.innerHTML=docDraft.length?docDraft.map((d,i)=>{const locked=hasDocData(d.id);return `<div class="drow2"><span class="no">${i+1}</span>
+    <input type="text" id="dn_${d.id}" data-i="${i}" value="${esc(d.name)}" aria-label="ชื่อแพทย์ลำดับ ${i+1}" placeholder="เช่น นพ.สมชาย ใจดี">
+    <select id="dd_${d.id}" data-i="${i}" data-k="dept" aria-label="แผนกของแพทย์ลำดับ ${i+1}"><option value="" ${d.dept?'':'selected'}>— เลือกแผนก —</option>${DEPTS.map(x=>`<option value="${x[0]}" ${d.dept===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>
+    <label class="act"><input type="checkbox" id="da_${d.id}" data-i="${i}" ${d.active!==false?'checked':''}> ปฏิบัติงานอยู่</label>
+    <button type="button" class="ibtn" data-up="${i}" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button>
+    <button type="button" class="ibtn" data-down="${i}" aria-label="เลื่อนลง" ${i<docDraft.length-1?'':'disabled'}>↓</button>
+    <button type="button" class="ibtn del" data-del="${i}" ${locked?'disabled title="มีข้อมูลบันทึกแล้ว ลบไม่ได้ ให้เอาเครื่องหมาย ปฏิบัติงานอยู่ ออกแทน"':''}>ลบ</button></div>`}).join('')
+    :`<div class="empty" style="padding:18px">ยังไม่มีรายชื่อแพทย์ กด “+ เพิ่มแพทย์” เพื่อเริ่ม${isDemo()?' (รายชื่อในตารางด้านบนเป็นตัวอย่าง)':''}</div>`;
+  $('#docStatus').textContent=docDirty?'มีการแก้ไขที่ยังไม่บันทึก':'';
+  $('#docCancel').hidden=!docDirty;
+}
+const markDocDirty=()=>{docDirty=true;$('#docStatus').textContent='มีการแก้ไขที่ยังไม่บันทึก';$('#docCancel').hidden=false};
+$('#docList').addEventListener('input',e=>{const t=e.target,i=t.dataset.i;if(i==null)return;
+  if(t.dataset.k==='dept')docDraft[i].dept=t.value;else if(t.type==='text')docDraft[i].name=t.value;else docDraft[i].active=t.checked;markDocDirty()});
+$('#docList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.up){const i=+b.dataset.up;[docDraft[i-1],docDraft[i]]=[docDraft[i],docDraft[i-1]]}
+  else if(b.dataset.down){const i=+b.dataset.down;[docDraft[i+1],docDraft[i]]=[docDraft[i],docDraft[i+1]]}
+  else if(b.dataset.del){docDraft.splice(+b.dataset.del,1)}else return;
+  markDocDirty();drawDocManage()});
+$('#docAdd').onclick=()=>{const id='d'+Date.now().toString(36);docDraft.push({id,name:'',dept:'',active:true});docDirty=true;drawDocManage();const el=document.getElementById('dn_'+id);el&&el.focus()};
+$('#docCancel').onclick=()=>{docDirty=false;renderDocManage()};
+$('#docSave').onclick=async()=>{
+  const list=docDraft.map(d=>({id:d.id,name:d.name.trim(),dept:d.dept||'',active:d.active!==false})).filter(d=>d.name);
+  const names=list.map(d=>d.name);if(new Set(names).size!==names.length){toast('มีชื่อแพทย์ซ้ำกัน กรุณาแก้ก่อนบันทึก');return}
+  if(!db){toast('ยังเชื่อมต่อฐานข้อมูลไม่ได้');return}
+  $('#docSave').disabled=true;
+  try{const n={...cfg,doctors:list};await db.doc('config/main').set({cfg:JSON.stringify(n),at:new Date().toISOString()});docDirty=false;toast('บันทึกรายชื่อแพทย์แล้ว')}
+  catch(e){toast('บันทึกไม่สำเร็จ: คุณอาจไม่มีสิทธิ์แก้ไข')}
+  finally{$('#docSave').disabled=false}};
+
+/* ---------- scopes & repairs ---------- */
+const SC_STATUS=[['ready','พร้อมใช้','good'],['repair','ส่งซ่อม','bad'],['retired','จำหน่ายแล้ว','none']];
+const RP_STATUS=[['sent','ส่งซ่อมแล้ว','bad'],['quote','รออนุมัติ / ใบเสนอราคา','warn'],['repairing','กำลังซ่อม','bad'],['returned','รับคืนแล้ว','good'],['cancel','ยกเลิก','none']];
+const SC_TYPES=['Gastroscope','Colonoscope','Duodenoscope','Linear EUS','Radial EUS','Enteroscope','Sigmoidoscope','Cholangioscope','Pediatric gastroscope','Pediatric colonoscope'];
+let scopes={},repairs={},scEditId=null,rpEditId=null,rpFilter='open';
+const isOpenRp=r=>r.status!=='returned'&&r.status!=='cancel';
+const stInfo=(L,v)=>L.find(x=>x[0]===v)||L[0];
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const thDate=iso=>{if(!iso)return'—';const d=new Date(iso+'T00:00:00');return isNaN(d)?'—':d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})};
+const daysBetween=(a,b)=>{if(!a)return null;const x=new Date(a+'T00:00:00'),y=new Date((b||todayISO())+'T00:00:00');return isNaN(x)||isNaN(y)?null:Math.max(0,Math.round((y-x)/864e5))};
+const scLabel=id=>{const s=scopes[id];return s?`${s.code}${s.type?' · '+s.type:''}`:'(กล้องที่ถูกลบ)'};
+function fyStartISO(){const d=new Date(),y=d.getFullYear(),m=d.getMonth()+1,S=fyS();return (m>=S?y:y-1)+'-'+String(S).padStart(2,'0')+'-01'}
+$('#scStatus').innerHTML=SC_STATUS.map(s=>`<option value="${s[0]}">${s[1]}</option>`).join('');
+$('#rpStatus').innerHTML=RP_STATUS.map(s=>`<option value="${s[0]}">${s[1]}</option>`).join('');
+$('#scTypes').innerHTML=SC_TYPES.map(t=>`<option value="${t}"></option>`).join('');
+function openRepairOf(id){return Object.entries(repairs).filter(([,r])=>r.scope===id&&isOpenRp(r)).sort((a,b)=>(b[1].sent||'').localeCompare(a[1].sent||''))[0]}
+
+function renderScopes(){
+  const list=Object.entries(scopes).map(([id,s])=>({id,...s}));
+  const act=list.filter(s=>s.status!=='retired'),cnt=st=>act.filter(s=>s.status===st).length;
+  const fy=fyStartISO(),rp=Object.values(repairs);
+  const rdy=cnt('ready');
+  $('#scKpis').innerHTML=`
+    <div class="kpi"><div class="k">กล้องที่ใช้งาน</div><div class="v">${fmt(act.length)}<small>ตัว</small></div><div class="d">${list.length-act.length?`ไม่รวมจำหน่ายแล้ว ${list.length-act.length} ตัว`:'&nbsp;'}</div></div>
+    <div class="kpi"><div class="k">พร้อมใช้</div><div class="v">${fmt(rdy)}<small>ตัว</small></div><div class="d">${act.length?fmtP(pct(rdy,act.length))+'% ของกล้องที่ใช้งาน':'—'}</div></div>
+    <div class="kpi"><div class="k">ส่งซ่อม</div><div class="v">${fmt(cnt('repair'))}<small>ตัว</small></div>${cnt('repair')?'<span class="chip bad">! ติดตามการซ่อม</span>':'<span class="chip good">✓ ไม่มีกล้องค้างซ่อม</span>'}</div>`;
+  if(!list.length){$('#scList').innerHTML=`<div class="empty">ยังไม่มีข้อมูลกล้อง${isAdmin()?' กด “+ เพิ่มกล้อง” เพื่อลงทะเบียนกล้องตัวแรก<br>แต่ละตัวระบุประเภท รุ่น Serial no. และสถานะได้':' (ผู้ดูแลระบบเป็นผู้เพิ่มข้อมูลกล้อง)'}</div>`}
+  else{
+    const g={};list.forEach(s=>{(g[s.type||'ไม่ระบุประเภท']=g[s.type||'ไม่ระบุประเภท']||[]).push(s)});
+    const order=Object.keys(g).sort((a,b)=>{const ia=SC_TYPES.indexOf(a),ib=SC_TYPES.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
+    $('#scList').innerHTML=order.map(t=>{const L=g[t].sort((a,b)=>(a.status==='retired')-(b.status==='retired')||String(a.code).localeCompare(String(b.code),'th',{numeric:true}));
+      const a=L.filter(s=>s.status!=='retired');const seg=SC_STATUS.slice(0,3).map(st=>({n:a.filter(s=>s.status===st[0]).length,c:st[2]})).filter(x=>x.n);
+      return `<div class="tgroup"><div class="tgh"><b>${esc(t)}</b><span class="sv">${a.length} ตัว · พร้อมใช้ ${a.filter(s=>s.status==='ready').length}</span>
+        <span class="tbar" aria-hidden="true">${seg.map(x=>`<span style="flex:${x.n};background:var(--${x.c})"></span>`).join('')}</span></div>
+        ${L.map(s=>{const st=stInfo(SC_STATUS,s.status);const o=openRepairOf(s.id);
+          return `<div class="srow${s.status==='retired'?' retired':''}">${isAdmin()?`<button type="button" class="linkbtn" data-sc-edit="${s.id}">${esc(s.code||'(ไม่มีรหัส)')}</button>`:`<b>${esc(s.code||'(ไม่มีรหัส)')}</b>`}
+            <span class="smeta">${[s.model,s.serial&&'S/N '+s.serial,s.asset&&'ครุภัณฑ์ '+s.asset].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</span>
+            ${isAdmin()?`<select class="pillsel ${st[2]}" data-sc-status="${s.id}" id="scs_${s.id}" aria-label="สถานะ ${esc(s.code)}">${SC_STATUS.map(x=>`<option value="${x[0]}" ${x[0]===st[0]?'selected':''}>${x[1]}</option>`).join('')}</select>`:`<span class="chip ${st[2]}">${st[1]}</span>`}
+            ${o||s.note?`<div class="extra">${o?`ส่งซ่อมเมื่อ ${thDate(o[1].sent)} · ${daysBetween(o[1].sent)} วัน · ${esc(stInfo(RP_STATUS,o[1].status)[1])}${s.note?' · ':''}`:''}${esc(s.note||'')}</div>`:''}</div>`}).join('')}</div>`}).join('');
+  }
+  renderRepairs();
+}
+function renderRepairs(){
+  $$('[data-rpf]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.rpf===rpFilter));
+  const all=Object.entries(repairs).map(([id,r])=>({id,...r}));
+  const L=all.filter(r=>rpFilter==='all'||isOpenRp(r)).sort((a,b)=>(b.sent||'').localeCompare(a.sent||''));
+  const done=all.filter(r=>r.status==='returned'&&r.sent&&r.ret).map(r=>daysBetween(r.sent,r.ret));
+  const open=all.filter(isOpenRp).length;
+  $('#rpHint').textContent=`ค้างซ่อม ${open} รายการ`+(done.length?` · ใช้เวลาซ่อมเฉลี่ย ${fmtP(done.reduce((a,b)=>a+b,0)/done.length)} วัน`:'');
+  if(!L.length){$('#rpTable').innerHTML=`<tbody><tr><td class="empty" style="text-align:center;position:static">${all.length?'ไม่มีกล้องค้างซ่อม':'ยังไม่มีรายการส่งซ่อม'}</td></tr></tbody>`;return}
+  $('#rpTable').innerHTML=`<thead><tr><th>วันที่ส่ง</th><th>กล้อง</th><th class="l">อาการ / ปัญหา</th><th class="l">ผู้รับซ่อม</th><th>สถานะ</th><th>รับคืน</th><th>จำนวนวัน</th></tr></thead><tbody>`+
+    L.map(r=>{const st=stInfo(RP_STATUS,r.status);const d=r.status==='cancel'?null:daysBetween(r.sent,r.status==='returned'?r.ret:null);
+      return `<tr ${isAdmin()?`data-rp="${r.id}" tabindex="0"`:''}><td>${thDate(r.sent)}</td><td class="l"><b>${esc(scLabel(r.scope))}</b></td><td class="prob">${esc(r.problem||'')}${r.loan?`<div class="sub">ทดแทน: ${esc(r.loan)}</div>`:''}</td>
+        <td class="l">${esc(r.vendor||'—')}${r.ticket?`<div class="sub">เลขที่ ${esc(r.ticket)}</div>`:''}</td>
+        <td><span class="chip ${st[2]}">${st[1]}</span></td><td>${thDate(r.ret)}</td><td class="${isOpenRp(r)&&d>30?'hot':''}">${d==null?'—':fmt(d)}</td></tr>`}).join('')+'</tbody>';
+}
+$$('[data-rpf]').forEach(b=>b.onclick=()=>{rpFilter=b.dataset.rpf;renderRepairs()});
+function inlineConfirm(box,msg,ok,fn){box.hidden=false;box.innerHTML=`<div class="confirm"><span style="flex:1">${msg}</span><button class="btn" type="button" data-c="no">ยกเลิก</button><button class="btn danger" type="button" data-c="yes">${ok}</button></div>`;
+  box.querySelector('[data-c=no]').onclick=()=>box.hidden=true;box.querySelector('[data-c=yes]').onclick=()=>{box.hidden=true;fn()}}
+const needDb=()=>{if(!db){toast('ยังเชื่อมต่อฐานข้อมูลไม่ได้');return false}return true};
+const writeErr=e=>toast(e&&/permission|not_granted|denied|forbidden|invalid_argument/i.test((e.code||'')+(e.message||''))?'คุณไม่มีสิทธิ์แก้ไข ขอสิทธิ์จากเจ้าของหน้า':'บันทึกไม่สำเร็จ');
+
+function openScForm(id){scEditId=id;const s=id?scopes[id]:{status:'ready'};
+  $('#scFormTitle').textContent=id?'แก้ไขข้อมูลกล้อง':'เพิ่มกล้อง';
+  $('#scCode').value=s.code||'';$('#scType').value=s.type||'';$('#scModel').value=s.model||'';$('#scSerial').value=s.serial||'';$('#scAsset').value=s.asset||'';$('#scStatus').value=s.status||'ready';$('#scNote').value=s.note||'';
+  $('#scDel').hidden=!id;$('#scConfirm').hidden=true;$('#scFormPanel').hidden=false;$('#scFormPanel').scrollIntoView({block:'nearest'});$('#scCode').focus()}
+$('#scAdd').onclick=()=>openScForm(null);
+$('#scCancel').onclick=()=>{$('#scFormPanel').hidden=true;scEditId=null};
+$('#scList').addEventListener('click',e=>{const b=e.target.closest('[data-sc-edit]');if(b)openScForm(b.dataset.scEdit)});
+$('#scList').addEventListener('change',async e=>{const s=e.target.closest('[data-sc-status]');if(!s||!needDb())return;const id=s.dataset.scStatus,v=s.value;
+  try{await db.doc('scopes/'+id).update({status:v,updatedAt:new Date().toISOString()});
+    if(v==='repair'&&!openRepairOf(id)){toast('เปลี่ยนเป็น “ส่งซ่อม” แล้ว กรอกรายละเอียดการส่งซ่อมได้ด้านล่าง');openRpForm(null,id)}else toast(`${scopes[id]?.code||''}: ${stInfo(SC_STATUS,v)[1]}`)}
+  catch(err){writeErr(err);renderScopes()}});
+$('#scSave').onclick=async()=>{
+  const d={code:$('#scCode').value.trim(),type:$('#scType').value.trim(),model:$('#scModel').value.trim(),serial:$('#scSerial').value.trim(),asset:$('#scAsset').value.trim(),status:$('#scStatus').value,note:$('#scNote').value.trim(),updatedAt:new Date().toISOString()};
+  if(!d.code||!d.type){toast('กรุณากรอกรหัสกล้องและประเภทกล้อง');return}
+  if(Object.entries(scopes).some(([id,s])=>id!==scEditId&&String(s.code).toLowerCase()===d.code.toLowerCase())){toast('รหัสกล้องนี้มีอยู่แล้ว');return}
+  if(!needDb())return;const id=scEditId||('s'+Date.now().toString(36));
+  try{await db.doc('scopes/'+id).set(d);$('#scFormPanel').hidden=true;scEditId=null;toast('บันทึกข้อมูลกล้องแล้ว')}catch(e){writeErr(e)}};
+$('#scDel').onclick=()=>{const id=scEditId;const n=Object.values(repairs).filter(r=>r.scope===id).length;
+  inlineConfirm($('#scConfirm'),`ลบกล้อง “${esc(scopes[id]?.code||'')}”?${n?` กล้องนี้มีประวัติส่งซ่อม ${n} รายการ ถ้าเลิกใช้แล้วแนะนำให้เปลี่ยนสถานะเป็น “จำหน่ายแล้ว” แทน เพื่อเก็บประวัติไว้`:''}`,'ลบกล้อง',async()=>{
+    if(!needDb())return;try{await db.doc('scopes/'+id).delete();$('#scFormPanel').hidden=true;scEditId=null;toast('ลบแล้ว')}catch(e){writeErr(e)}})};
+
+function openRpForm(id,scopeId){rpEditId=id;const r=id?repairs[id]:{scope:scopeId||'',sent:todayISO(),status:'sent'};
+  const opts=Object.entries(scopes).filter(([sid,s])=>s.status!=='retired'||sid===r.scope).sort((a,b)=>String(a[1].code).localeCompare(String(b[1].code),'th',{numeric:true}));
+  $('#rpScope').innerHTML='<option value="">— เลือกกล้อง —</option>'+opts.map(([sid])=>`<option value="${sid}">${esc(scLabel(sid))}</option>`).join('');
+  if(!opts.length){toast('ยังไม่มีข้อมูลกล้อง เพิ่มกล้องก่อนบันทึกส่งซ่อม');openScForm(null);return}
+  $('#rpFormTitle').textContent=id?'แก้ไขรายการส่งซ่อม':'บันทึกส่งซ่อม';
+  $('#rpScope').value=r.scope||'';$('#rpSent').value=r.sent||'';$('#rpStatus').value=r.status||'sent';$('#rpReturn').value=r.ret||'';$('#rpProblem').value=r.problem||'';
+  $('#rpVendor').value=r.vendor||'';$('#rpTicket').value=r.ticket||'';$('#rpLoan').value=r.loan||'';$('#rpNote').value=r.note||'';
+  $('#rpDel').hidden=!id;$('#rpConfirm').hidden=true;$('#rpFormPanel').hidden=false;$('#rpFormPanel').scrollIntoView({block:'nearest'})}
+$('#rpAdd').onclick=()=>openRpForm(null);
+$('#rpCancel').onclick=()=>{$('#rpFormPanel').hidden=true;rpEditId=null};
+$('#rpStatus').onchange=()=>{if($('#rpStatus').value==='returned'&&!$('#rpReturn').value)$('#rpReturn').value=todayISO()};
+$('#rpTable').addEventListener('click',e=>{const tr=e.target.closest('tr[data-rp]');if(tr)openRpForm(tr.dataset.rp)});
+$('#rpTable').addEventListener('keydown',e=>{const tr=e.target.closest('tr[data-rp]');if(tr&&e.key==='Enter')openRpForm(tr.dataset.rp)});
+$('#rpSave').onclick=async()=>{
+  const d={scope:$('#rpScope').value,sent:$('#rpSent').value,status:$('#rpStatus').value,ret:$('#rpReturn').value,problem:$('#rpProblem').value.trim(),vendor:$('#rpVendor').value.trim(),ticket:$('#rpTicket').value.trim(),loan:$('#rpLoan').value.trim(),note:$('#rpNote').value.trim(),updatedAt:new Date().toISOString()};
+  if(!d.scope||!d.sent||!d.problem){toast('กรุณาเลือกกล้อง ใส่วันที่ส่ง และอาการที่พบ');return}
+  if(d.ret&&d.ret<d.sent){toast('วันที่รับคืนต้องไม่ก่อนวันที่ส่งซ่อม');return}
+  if(d.status==='returned'&&!d.ret){toast('กรุณาใส่วันที่รับคืน');return}
+  if(!needDb())return;const id=rpEditId||('r'+Date.now().toString(36));
+  try{await db.doc('repairs/'+id).set(d);
+    const sc=scopes[d.scope];let msg='บันทึกรายการส่งซ่อมแล้ว';
+    if(sc){if(isOpenRp(d)&&sc.status!=='repair'){await db.doc('scopes/'+d.scope).update({status:'repair',updatedAt:d.updatedAt});msg+=' · สถานะกล้องเป็น “ส่งซ่อม”'}
+      else if(!isOpenRp(d)&&sc.status==='repair'&&!Object.entries(repairs).some(([rid,r])=>rid!==id&&r.scope===d.scope&&isOpenRp(r))){await db.doc('scopes/'+d.scope).update({status:'ready',updatedAt:d.updatedAt});msg+=' · สถานะกล้องเป็น “พร้อมใช้”'}}
+    $('#rpFormPanel').hidden=true;rpEditId=null;toast(msg)}catch(e){writeErr(e)}};
+$('#rpDel').onclick=()=>{const id=rpEditId;inlineConfirm($('#rpConfirm'),'ลบรายการส่งซ่อมนี้? การลบย้อนกลับไม่ได้','ลบรายการ',async()=>{
+  if(!needDb())return;try{await db.doc('repairs/'+id).delete();$('#rpFormPanel').hidden=true;rpEditId=null;toast('ลบแล้ว')}catch(e){writeErr(e)}})};
+
+/* ---------- scope of service & schedule ---------- */
+const DAYS=[['mon','จันทร์'],['tue','อังคาร'],['wed','พุธ'],['thu','พฤหัสบดี'],['fri','ศุกร์']];
+const SV_DEFAULT=[
+  {id:'scope',title:'ขอบเขตการให้บริการ',ph:'เช่น ให้บริการส่องกล้องตรวจวินิจฉัยและรักษาโรคระบบทางเดินอาหาร ตับ และทางเดินน้ำดี'},
+  {id:'clients',title:'กลุ่มผู้รับบริการ',ph:'เช่น ผู้ป่วยนอก ผู้ป่วยใน ผู้ป่วยส่งต่อจากโรงพยาบาลเครือข่าย ผู้ป่วยเด็กอายุ … ปีขึ้นไป'},
+  {id:'hours',title:'วันและเวลาให้บริการ',ph:'เช่น ในเวลาราชการ จันทร์–ศุกร์ 08.00–16.00 น. · นอกเวลา/ฉุกเฉิน ตามระบบ on-call'},
+  {id:'procs',title:'หัตถการที่ให้บริการ',auto:'procs',ph:'รายการด้านล่างดึงจากหมวดหัตถการในหน้าตั้งค่าอัตโนมัติ เพิ่มรายละเอียดอื่นได้ที่นี่'},
+  {id:'limits',title:'ข้อจำกัด / บริการที่ส่งต่อ',ph:'เช่น หัตถการที่ยังไม่ให้บริการ และโรงพยาบาลที่ส่งต่อ'},
+  {id:'team',title:'อัตรากำลังและทีม',ph:'เช่น แพทย์ … ท่าน · พยาบาลส่องกล้อง … คน · ผู้ช่วยเหลือคนไข้ … คน'},
+  {id:'equip',title:'เครื่องมือและอุปกรณ์',auto:'scopes',ph:'จำนวนกล้องด้านล่างดึงจากหน้ากล้องส่องตรวจอัตโนมัติ เพิ่มเครื่องมืออื่นได้ที่นี่'},
+  {id:'contact',title:'ช่องทางติดต่อ / นัดหมาย',ph:'เช่น โทรศัพท์ภายใน … · ขั้นตอนการนัดหมายและเตรียมตัว'}];
+let service=null,svEditing=false,svDraft=null,sched=null,schEditing=false,schDraft=null;
+const svSections=()=>service&&Array.isArray(service.sections)?service.sections:SV_DEFAULT.map(s=>({id:s.id,title:s.title,body:'',auto:s.auto}));
+const phOf=id=>(SV_DEFAULT.find(s=>s.id===id)||{}).ph||'';
+const schData=()=>sched&&Array.isArray(sched.rows)?sched:{rows:[{id:'r1',label:'เช้า 08.00–12.00'},{id:'r2',label:'บ่าย 13.00–16.00'}],cells:{}};
+const docName=id=>{const d=(cfg.doctors||[]).find(x=>x.id===id);return d?d.name:null};
+const fmtStamp=iso=>iso?'แก้ไขล่าสุด '+new Date(iso).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):'';
+function autoChips(kind){
+  if(kind==='procs')return `<div class="chips">${catItems('proc').map(p=>`<span>${esc(p)}</span>`).join('')}</div>`;
+  if(kind==='scopes'){const g={};Object.values(scopes).filter(s=>s.status!=='retired').forEach(s=>{const t=s.type||'ไม่ระบุประเภท';g[t]=g[t]||{n:0,r:0};g[t].n++;if(s.status==='ready')g[t].r++});
+    const k=Object.keys(g);return k.length?`<div class="chips">${k.map(t=>`<span>${esc(t)} ${g[t].n} ตัว (พร้อมใช้ ${g[t].r})</span>`).join('')}</div>`:'<div class="sub" style="margin-top:6px">ยังไม่มีข้อมูลกล้อง</div>'}
+  return''}
+function renderService(){
+  $('#svUpdated').textContent=fmtStamp(service&&service.at);
+  $('#svEdit').hidden=svEditing;$('#svView').hidden=svEditing;$('#svEditBox').hidden=!svEditing;
+  if(!svEditing){$('#svView').innerHTML=svSections().map(s=>`<div class="svc"><h3>${esc(s.title)}</h3><div class="body${s.body?'':' emp'}">${s.body?esc(s.body):'ยังไม่ได้ระบุ · กด “แก้ไข” เพื่อเพิ่มข้อมูล'}</div>${s.auto?autoChips(s.auto):''}</div>`).join('')}
+  else drawSvEdit();
+  renderSchedule();
+}
+function drawSvEdit(){
+  $('#svSections').innerHTML=svDraft.map((s,i)=>`<div class="sved" data-sv="${i}"><div class="top"><input type="text" id="sv_${s.id}_t" data-f="title" value="${esc(s.title)}" aria-label="หัวข้อ">
+    ${s.auto?`<span class="tag acc">${s.auto==='procs'?'ดึงรายการหัตถการอัตโนมัติ':'ดึงจำนวนกล้องอัตโนมัติ'}</span>`:''}
+    <button type="button" class="ibtn" data-act="up" ${i?'':'disabled'} aria-label="เลื่อนขึ้น">↑</button><button type="button" class="ibtn" data-act="down" ${i<svDraft.length-1?'':'disabled'} aria-label="เลื่อนลง">↓</button><button type="button" class="ibtn del" data-act="del">ลบหัวข้อ</button></div>
+    <textarea id="sv_${s.id}_b" data-f="body" aria-label="รายละเอียด ${esc(s.title)}" placeholder="${esc(phOf(s.id))}" style="min-height:90px">${esc(s.body||'')}</textarea></div>`).join('')||'<div class="empty">ยังไม่มีหัวข้อ</div>';
+}
+$('#svEdit').onclick=()=>{svDraft=structuredClone(svSections());svEditing=true;renderService()};
+$('#svCancel').onclick=()=>{svEditing=false;renderService()};
+$('#svAdd').onclick=()=>{const id='v'+Date.now().toString(36);svDraft.push({id,title:'หัวข้อใหม่',body:''});drawSvEdit();const el=document.getElementById(`sv_${id}_t`);if(el){el.focus();el.select()}};
+$('#svSections').addEventListener('input',e=>{const w=e.target.closest('[data-sv]');if(w&&e.target.dataset.f)svDraft[+w.dataset.sv][e.target.dataset.f]=e.target.value});
+$('#svSections').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(!b||b.disabled)return;const i=+b.closest('[data-sv]').dataset.sv,L=svDraft;
+  if(b.dataset.act==='up')[L[i-1],L[i]]=[L[i],L[i-1]];else if(b.dataset.act==='down')[L[i+1],L[i]]=[L[i],L[i+1]];else L.splice(i,1);drawSvEdit()});
+$('#svSave').onclick=async()=>{const secs=svDraft.map(s=>({id:s.id,title:(s.title||'').trim(),body:(s.body||'').trim(),...(s.auto?{auto:s.auto}:{})}));
+  if(secs.some(s=>!s.title)){toast('มีหัวข้อที่ยังไม่ได้ตั้งชื่อ');return}
+  if(!needDb())return;$('#svSave').disabled=true;
+  try{await db.doc('service/main').set({sections:secs,at:new Date().toISOString()});svEditing=false;toast('บันทึก Scope of service แล้ว')}catch(e){writeErr(e)}finally{$('#svSave').disabled=false}};
+
+function renderSchedule(){
+  const S=schEditing?schDraft:schData();const td=new Date().getDay();const today=td>=1&&td<=5?DAYS[td-1][0]:null;
+  const docs=(cfg.doctors||[]).filter(d=>d.active!==false);
+  $('#schNoDoc').hidden=!(schEditing&&!docs.length);
+  $('#schEdit').hidden=schEditing;$('#schBar').hidden=!schEditing;
+  $('#schUpdated').textContent='จันทร์ – ศุกร์'+(sched&&sched.at?' · '+fmtStamp(sched.at):'');
+  const head=`<thead><tr><th>ช่วงเวลา / ห้อง</th>${DAYS.map(([k,l])=>`<th class="${k===today?'today':''}">${l}${k===today?' · วันนี้':''}</th>`).join('')}</tr></thead>`;
+  const body=S.rows.map((r,ri)=>`<tr>${schEditing?`<td class="slot"><input type="text" id="schl_${r.id}" data-row="${ri}" data-f="label" value="${esc(r.label)}" aria-label="ชื่อช่วงเวลา" style="margin-top:0"><button type="button" class="ibtn del" data-delrow="${ri}" style="margin-top:6px">ลบแถว</button></td>`:`<td class="slot">${esc(r.label)}</td>`}
+    ${DAYS.map(([k])=>{const c=S.cells[r.id+'_'+k]||{docs:[],note:''};const names=(c.docs||[]).map(docName).filter(Boolean);
+      if(!schEditing){const ds=(c.docs||[]).map(id=>(cfg.doctors||[]).find(x=>x.id===id)).filter(Boolean);
+        return `<td class="${k===today?'today':''}">${ds.length?ds.map(d=>`<div class="dn">${esc(d.name)}${dtag(d.dept)}</div>`).join(''):(c.note?'':'<span class="nt">—</span>')}${c.note?`<div class="nt">${esc(c.note)}</div>`:''}</td>`}
+      const all=[...docs,...(c.docs||[]).filter(id=>!docs.some(d=>d.id===id)).map(id=>(cfg.doctors||[]).find(x=>x.id===id)).filter(Boolean)]
+        .map((d,i)=>({d,i})).sort((a,b)=>deptOrder(a.d.dept)-deptOrder(b.d.dept)||a.i-b.i).map(x=>x.d);
+      return `<td class="${k===today?'today':''}">${all.length?`<details class="picker"><summary class="${names.length?'':'emp'}" id="schs_${r.id}_${k}">${esc(names.join(', ')||'เลือกแพทย์…')}</summary><div class="opts">${all.map(d=>`<label><input type="checkbox" data-row="${ri}" data-day="${k}" data-doc="${d.id}" ${(c.docs||[]).includes(d.id)?'checked':''}> ${esc(d.name)}${dtag(d.dept)}</label>`).join('')}</div></details>`:''}
+        <input type="text" id="schn_${r.id}_${k}" data-row="${ri}" data-day="${k}" data-f="note" value="${esc(c.note||'')}" placeholder="หมายเหตุ เช่น ERCP" aria-label="หมายเหตุ"></td>`}).join('')}</tr>`).join('');
+  $('#schTable').innerHTML=head+'<tbody>'+(body||`<tr><td colspan="6" class="empty" style="position:static">ยังไม่มีช่วงเวลา</td></tr>`)+'</tbody>';
+}
+$('#schEdit').onclick=()=>{schDraft=structuredClone(schData());schEditing=true;renderSchedule()};
+$('#schCancel').onclick=()=>{schEditing=false;renderSchedule()};
+$('#schAddRow').onclick=()=>{const id='r'+Date.now().toString(36);schDraft.rows.push({id,label:'ช่วงเวลาใหม่'});renderSchedule();const el=document.getElementById('schl_'+id);if(el){el.focus();el.select()}};
+$('#schTable').addEventListener('input',e=>{if(!schEditing)return;const t=e.target,ri=t.dataset.row;if(ri==null)return;const r=schDraft.rows[+ri];
+  if(t.dataset.f==='label'){r.label=t.value;return}
+  const key=r.id+'_'+t.dataset.day;const c=schDraft.cells[key]=schDraft.cells[key]||{docs:[],note:''};
+  if(t.dataset.f==='note'){c.note=t.value;return}
+  if(t.dataset.doc){c.docs=t.checked?[...new Set([...c.docs,t.dataset.doc])]:c.docs.filter(x=>x!==t.dataset.doc);
+    const s=document.getElementById(`schs_${r.id}_${t.dataset.day}`);const nm=c.docs.map(docName).filter(Boolean);s.textContent=nm.join(', ')||'เลือกแพทย์…';s.classList.toggle('emp',!nm.length)}});
+$('#schTable').addEventListener('click',e=>{const b=e.target.closest('[data-delrow]');if(!b)return;const r=schDraft.rows.splice(+b.dataset.delrow,1)[0];
+  DAYS.forEach(([k])=>delete schDraft.cells[r.id+'_'+k]);renderSchedule()});
+$('#schSave').onclick=async()=>{const rows=schDraft.rows.map(r=>({id:r.id,label:(r.label||'').trim()}));if(rows.some(r=>!r.label)){toast('มีช่วงเวลาที่ยังไม่ได้ตั้งชื่อ');return}
+  const cells={};for(const r of rows)for(const [k] of DAYS){const c=schDraft.cells[r.id+'_'+k];if(c&&((c.docs&&c.docs.length)||(c.note||'').trim()))cells[r.id+'_'+k]={docs:c.docs||[],note:(c.note||'').trim()}}
+  if(!needDb())return;$('#schSave').disabled=true;
+  try{await db.doc('schedule/main').set({rows,cells,at:new Date().toISOString()});schEditing=false;toast('บันทึกตารางแพทย์แล้ว')}catch(e){writeErr(e)}finally{$('#schSave').disabled=false}};
+
+/* ---------- routing / render ---------- */
+const TABS=['overview','doctors','entry','data','scopes','service','setup'];
+function route(){let t=location.hash.slice(1);if(!TABS.includes(t))t='overview';
+  if(t==='setup'&&!isAdmin())t='overview';
+  if(t==='entry'&&role!=='admin'&&role!=='staff')t='overview';
+  $$('section[data-view]').forEach(s=>s.hidden=s.dataset.view!==t);
+  $$('nav a').forEach(a=>a.setAttribute('aria-current',a.dataset.tab===t?'page':'false'));
+  $('#periodBar').hidden=!(t==='overview'||t==='data'||t==='doctors');
+  $('#demoNote').hidden=!(demo&&!Object.keys(real).length&&(t==='overview'||t==='data'||t==='doctors'));
+  if(t==='overview')renderOverview();
+  if(t==='doctors')renderDoctors();
+  if(t==='entry'&&!eDirty){buildEntrySelectors();renderEntry()}
+  if(t==='setup'&&!sDirty)renderSetup();
+  if(t==='scopes')renderScopes();
+  if(t==='service')renderService();
+}
+window.addEventListener('hashchange',route);
+function renderAll(){
+  $('#unitName').textContent=cfg.unit;
+  if(Object.keys(real).length)demo=null;
+  else{const sig=viewDoctors().map(d=>d.id).join(',');if(!demo||demoSig!==sig){demo=makeDemo(viewDoctors());demoSig=sig}}
+  buildPeriodBar();renderData();route();
+}
+let demoSig='';
+const rerender=()=>{if(!$('section[data-view="overview"]').hidden)renderOverview();if(!$('section[data-view="doctors"]').hidden)renderDoctors()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rerender);
+new MutationObserver(rerender).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(rerender,200)});
+
+readPref();if(mode==='cal')year=nowBE;
+try{renderAll()}catch(e){console.error(e)}
+window.addEventListener('load',()=>{try{renderOverview()}catch(e){console.error(e)}});
+
+/* ---------- db ---------- */
+function setSync(on,t){$('#syncDot').classList.toggle('on',on);$('#syncText').textContent=t}
+const withTimeout=(p,ms,fb)=>Promise.race([Promise.resolve(p).catch(()=>fb),new Promise(r=>setTimeout(()=>r(fb),ms))]);
+const safe=fn=>(...a)=>{try{fn(...a)}catch(e){console.error(e)}};
+function applyRole(adm,wr){
+  role=!db?'viewer':adm?'admin':(wr===false?'viewer':'staff');document.body.dataset.role=role;
+  const rt=$('#roleText');rt.hidden=false;rt.className='role'+(role==='admin'?' admin':'');
+  rt.textContent=role==='admin'?'ผู้ดูแลระบบ':role==='staff'?'ผู้บันทึกข้อมูล':'ดูอย่างเดียว';
+  rt.title=role==='admin'?'แก้ไขและตั้งค่าได้ทุกส่วน':role==='staff'?'กรอกสถิติรายเดือนได้ ส่วนการตั้งค่าและการแก้ไขอื่นๆ ทำได้เฉพาะผู้ดูแลระบบ':'ดูข้อมูลได้อย่างเดียว';
+  const B=window.endoBackend,on=!!(B&&B.configured&&db);
+  $('#loginOpen').hidden=!on||role==='admin'||role==='staff'||(B&&B.role()==='viewer');$('#logoutBtn').hidden=!on||!(B&&B.role());
+  if(B&&B.role()==='viewer')rt.textContent='ดูข้อมูล';
+  try{route()}catch(e){console.error(e)}}
+/* ---------- login (GitHub / Google Sheets version) ---------- */
+function openLogin(){const f=$('#loginForm');f.hidden=false;$('#loginErr').textContent='';$('#loginPw').value='';setTimeout(()=>$('#loginPw').focus(),0)}
+$('#loginOpen').onclick=openLogin;$('#lockLogin').onclick=openLogin;
+$('#loginCancel').onclick=()=>{$('#loginForm').hidden=true};
+$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const B=window.endoBackend;if(!B)return;
+  const btn=$('#loginSubmit');btn.disabled=true;$('#loginErr').textContent='กำลังตรวจสอบ…';
+  try{const r=await B.login($('#loginPw').value);$('#loginForm').hidden=true;$('#loginPw').value='';
+    toast(r==='admin'?'เข้าสู่ระบบในฐานะผู้ดูแลระบบ':r==='staff'?'เข้าสู่ระบบในฐานะผู้บันทึกข้อมูล':'เข้าสู่ระบบแล้ว')}
+  catch(err){$('#loginErr').textContent=err.message||'เข้าสู่ระบบไม่สำเร็จ'}
+  finally{btn.disabled=false}});
+$('#logoutBtn').onclick=async()=>{sDirty=false;docDirty=false;eDirty=false;await window.endoBackend.logout();toast('ออกจากระบบแล้ว')};
+window.addEventListener('endo-auth',async()=>{if(!user)return;applyRole(await user.canEdit(),await user.can('data.write'))});
+window.addEventListener('endo-sync',e=>{const d=e.detail||{};
+  if(d.ok){document.body.removeAttribute('data-locked');$('#lockNote').hidden=true;setSync(true,'ข้อมูลทีมซิงก์อยู่');return}
+  if(d.code==='login_required'){document.body.dataset.locked='1';$('#lockNote').hidden=false;setSync(false,'ต้องเข้าสู่ระบบ');return}
+  if(d.code==='network'||d.code==='bad_response')setSync(false,'เชื่อมต่อไม่ได้ · กำลังลองใหม่')});
+if(!(window.endoBackend&&window.endoBackend.configured))$('#cfgNote').hidden=false;
+(async()=>{
+  // Start both capability lookups together; data never waits on the permission check.
+  const userP=withTimeout(claude.use('user'),12000,null);
+  db=await withTimeout(claude.use('db'),30000,null);
+  if(!db){setSync(false,window.endoBackend&&window.endoBackend.configured?'เชื่อมต่อข้อมูลไม่ได้ · ลองเปิดหน้านี้ใหม่':'ยังไม่ได้เชื่อมต่อ Google Sheets');applyRole(false,false);return}
+  {const le=window.endoBackend&&window.endoBackend.lastError();
+   if(le&&le.code==='login_required'){document.body.dataset.locked='1';$('#lockNote').hidden=false;setSync(false,'ต้องเข้าสู่ระบบ')}else setSync(true,'ข้อมูลทีมซิงก์อยู่')}
+  const vis=n=>!$(`section[data-view="${n}"]`).hidden;
+  const toMap=snap=>{const m={};snap.docs.forEach(d=>{const x=d.data();if(x)m[d.id]=x});return m};
+  db.doc('config/main').onSnapshot(safe(s=>{const d=s.data();if(d&&d.cfg){const c=JSON.parse(d.cfg);if(c&&Array.isArray(c.cats)){cfg=normalizeCfg(c);
+      if(!modeFromPref&&cfg.years.mode!==mode){mode=cfg.years.mode;year=mode==='fy'?fyOf(nowBE,nowM):nowBE;month=0}
+      renderAll();if(vis('entry')&&!eDirty)renderEntry()}}}),()=>{});
+  db.collection('months').onSnapshot(safe(snap=>{const r={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.y&&x.m)r[d.id]=x});real=r;
+      const editing=vis('entry')&&eDirty;renderAll();if(!editing&&vis('entry'))renderEntry()}),
+    ()=>setSync(false,'เชื่อมต่อข้อมูลไม่ได้'));
+  db.collection('scopes').onSnapshot(safe(s=>{scopes=toMap(s);if(vis('scopes'))renderScopes();if(vis('service')&&!svEditing&&!schEditing)renderService()}),()=>{});
+  db.collection('repairs').onSnapshot(safe(s=>{repairs=toMap(s);if(vis('scopes'))renderScopes()}),()=>{});
+  db.doc('service/main').onSnapshot(safe(s=>{service=s.data()||null;if(vis('service')&&!svEditing&&!schEditing)renderService()}),()=>{});
+  db.doc('schedule/main').onSnapshot(safe(s=>{sched=s.data()||null;if(vis('service')&&!schEditing)renderSchedule()}),()=>{});
+  // Permission check runs in the background; if it can't answer, the page lets the viewer try and the server's rules decide.
+  user=await userP;
+  const adm=user?await withTimeout(user.canEdit(),5000,false):false;
+  const wr=user?await withTimeout(user.can('data.write'),5000,null):null;
+  applyRole(adm,wr);
+})();
+})();
+</script>
+
+</body>
+</html>
