@@ -5,7 +5,7 @@
  * ดูวิธีได้ URL นี้ใน README.md ขั้นตอนที่ 3
  */
 window.ENDO_CONFIG = {
-  apiUrl: '',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxOschc6WLVrIX0bQ5xStCk03aTLdq5eOcgsrRU_KSj9LqqvBpAtw2ySmd4DfHDMpW3tg/exec',
 
   // ดึงข้อมูลใหม่ทุกกี่วินาที (เห็นการแก้ไขของคนอื่นโดยไม่ต้องรีเฟรช)
   refreshSeconds: 30
